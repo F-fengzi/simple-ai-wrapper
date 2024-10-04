@@ -1,221 +1,538 @@
+<!-- The following code is provided under the MIT License. Copyright 2024 Fengzi. -->
+<!-- As part of the MIT License, any deriatives must give credit to the mentioned copyright holder. -->
+<!-- The backend API can be very easily recreated by just following the examples provided in the Workers documentation. Mine used ~10 lines of code. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>simple-ai-wrapper</title>
-    <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper that i wrote in like 30 minutes with ai help">
+    <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
     <meta name="author" content="fengzi">
+    <meta name="version" content="2.0">
+    <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
     <style>
+        :root {
+            --image-count: 5;
+        }
+        html {
+            overflow-y: scroll;
+        }
         body {
             width: 100%;
             margin: 0;
             padding: 0.5rem;
             box-sizing: border-box;
         }
-        
-        #controls {
+        h1 {
+            font-size: 1.5em;
+        }
+        h2 {
+            font-size: 1.25em;
+        }
+        h3 {
+            font-size: 1.125em;
+        }
+        /* ------------------------------ */
+        #top-controls {
             width: 100%;
-            margin-bottom: 0.5rem;
             display: flex;
             flex-flow: row nowrap;
+            gap: 0.5rem;
         }
 
-        #options {
+        #options-column {
             flex: 1;
             display: flex;
             flex-flow: column nowrap;
         }
-        #task {
+        #text-task-column {
+            flex: 2;
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        #image-task-column {
             flex: 2;
             display: flex;
             flex-flow: row nowrap;
         }
 
-        #mode {
+        #mode-selector {
             height: 2rem;
+            box-sizing: border-box;
         }
-        #model {
+        #model-selector {
             height: 2rem;
-        }
-        #prompt {
-            width: 100%;
-            height: 4rem;
-            resize: none;
-        }
-        #send {
-            width: 6rem;
-            display: inline-block;
-            background-color: lightsalmon;
+            box-sizing: border-box;
         }
 
-        #quick-switches {
+        #system-prompt-input {
             width: 100%;
+            height: 2rem;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        #role-row {
+            display: flex;
+            flex-flow: row nowrap;
+        }
+        #role-row input {
+            flex: 1;
+            max-width: 50%;
+            height: 2rem;
+            box-sizing: border-box;
+        }
+
+        #image-prompt-input {
+            width: 100%;
+            height: 4rem;
+            box-sizing: border-box;
+            font-size: 16px;
+            resize: none;
+        }
+        #image-generate-button {
+            width: 6rem;
+            height: 4rem;
+            box-sizing: border-box;
+            background-color: #fa9b71;
+        }
+        /* ---------- */
+        #top-quick-switches {
+            width: 100%;
+            margin-top: 0.5rem;
             display: flex;
             gap: 0.5rem;
             justify-content: space-between;
         }
-        #quick-switches button {
+        .quick-switch-button {
             flex: 1;
             height: 2rem;
         }
-
-        #results {
+        .active {
+            background-color: #f1dcc9;
+        }
+        /* ---------- */
+        #results-display {
+            width: 100%;
+        }
+        #text-section {
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        #text-results {
+            align-self: center;
+            width: 100%;
+            max-width: 60rem;
+            display: flex;
+            flex-flow: column nowrap;
+            gap: 1rem;
+        }
+        .text-message {
+            margin: 0;
+            padding: 0.5rem 1rem;
+            max-width: 36rem;
+            box-sizing: border-box;
+            border-radius: 8px;
+            word-break: break-word;
+            box-shadow: 0 3px 6px rgba(10, 10, 9, 0.05);
+        }
+        .text-message p:first-child {
+            margin-top: 0;
+        }
+        .text-message p:last-child {
+            margin-bottom: 0;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #faeadb;
+        }
+        .model-message {
+            align-self: flex-start;
+            background-color: #faf7f3;
+        }
+        #text-required-blank-section {
+            height: 5rem;
+        }
+        #image-section {
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        #image-results {
             width: 100%;
             display: flex;
             flex-flow: row wrap;
+            gap: 0.5rem;
         }
-        #results img {
-            max-width: 100%;
-            max-height: 100vw;
+        #image-results img {
+            width: calc(100% / var(--image-count) - ((var(--image-count) - 1) * 0.5rem / var(--image-count)));
         }
-
+        /* ---------- */
+        #bottom-message-box {
+            position: fixed;
+            left: 0.5rem;
+            bottom: 0.5rem;
+            width: calc(100% - 1rem);
+            display: flex;
+            flex-flow: row nowrap;
+        }
+        #text-message-input {
+            width: 100%;
+            min-height: 3rem;
+            box-sizing: border-box;
+            font-size: 16px;
+            resize: vertical;
+        }
+        #text-send-button {
+            width: 4rem;
+            height: 3rem;
+            box-sizing: border-box;
+            background-color: #fa9b71;
+        }
+        /* ------------------------------ */
+        @media (prefers-color-scheme: dark) {
+            * {
+                background-color: #16130f;
+                color: #eee;
+            }
+            #image-generate-button {
+                background-color: #c75b29;
+            }
+            .active {
+                background-color: #3b2e27;
+            }
+            .user-message {
+                background-color: #41332c;
+            }
+            .model-message {
+                background-color: #1d1b19;
+            }
+            #text-send-button {
+                background-color: #c75b29;
+            }
+        }
+        @media screen and (max-width: 90rem) {
+            :root {
+                --image-count: 4;
+            }
+        }
+        @media screen and (max-width: 70rem) {
+            :root {
+                --image-count: 3;
+            }
+        }
+        @media screen and (max-width: 50rem) {
+            :root {
+                --image-count: 2;
+            }
+        }
         @media screen and (max-width: 36rem) {
-            #controls {
+            #top-controls {
                 flex-flow: column nowrap;
             }
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <div id="options">
-            <select id="mode">
+    <noscript>This thing doesn't work at all if you don't allow JavaScript.<br /><br /><br /></noscript>
+    <div id="top-controls">
+        <div id="options-column">
+            <select id="mode-selector">
                 <option value="text">Text Generation</option>
                 <option value="image">Image Generation</option>
             </select>
-            <input id="model" type="text" value="@cf/meta/llama-3.1-8b-instruct" placeholder="cf-accepted model">
+            <input id="model-selector" type="text" value="@cf/meta/llama-3.1-8b-instruct" placeholder="Cf-accepted model">
         </div>
-        <div id="task">
-            <textarea id="prompt" placeholder="Enter your prompt"></textarea>
-            <button id="send">Send</button>
+        <div id="text-task-column">
+            <textarea id="system-prompt-input" placeholder="System prompt">You are a friendly assistant.</textarea>
+            <div id="role-row">
+                <input id="model-role-input" value="assistant" placeholder="Model role (should not change)" />
+                <input id="user-role-input" value="user" placeholder="User role (should not change)" />
+            </div>
+        </div>
+        <div id="image-task-column">
+            <textarea id="image-prompt-input" placeholder="Enter your prompt"></textarea>
+            <button id="image-generate-button">Generate</button>
         </div>
     </div>
-    <div id="quick-switches">
-        <button class="model-button" data-model="@cf/stabilityai/stable-diffusion-xl-base-1.0">SDXL</button>
-        <button class="model-button" data-model="@cf/bytedance/stable-diffusion-xl-lightning">SDXL Lightning</button>
-        <button class="model-button" data-model="@cf/lykon/dreamshaper-8-lcm">DreamShaper - 8</button>
+    <div id="top-quick-switches">
+        <button class="quick-switch-button" data-model="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</button>
+        <button class="quick-switch-button" data-model="@hf/google/gemma-7b-it">Gemma 7B</button>
+        <button class="quick-switch-button" data-model="@hf/nousresearch/hermes-2-pro-mistral-7b">Hermes 2 Pro</button>
     </div>
-    <div id="results">
+    <div id="results-display">
         <div id="text-section">
             <p id="text-hint">Text:</p>
-            <p id="text-result"></p>
+            <div id="text-results"></div>
+            <div id="text-required-blank-section"></div>
         </div>
         <div id="image-section">
             <p id="image-hint">Images:</p>
             <div id="image-results"></div>
         </div>
     </div>
+    <div id="bottom-message-box">
+        <textarea id="text-message-input" placeholder="Type to model (Ctrl + Enter to send)" autofocus></textarea>
+        <button id="text-send-button">Send</button>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script>
-        // change default model and switch results display based on mode
-        const quickSwitches = document.getElementById("quick-switches");
-        const textSection = document.getElementById("text-section");
-        const imageSection = document.getElementById("image-section");
+        let mode = "text";
+        let textHistory = [];
 
-        quickSwitches.style.display = "none";
-        textSection.style.display = "block";
-        imageSection.style.display = "none";
+        // change default model and switch elements display based on mode
+        // must be exclusive to the mode and display be "flex"
+        const TEXT_MODE_ELEMENTS = ["text-task-column", "text-section", "bottom-message-box"];
+        const IMAGE_MODE_ELEMENTS = ["image-task-column", "image-section"];
 
-        document.getElementById("mode").addEventListener("change", () => {
-            const modeValue = document.getElementById("mode").value;
-            const modelInput = document.getElementById("model");
-            
-            if (modeValue === "text") {
-                modelInput.value = "@cf/meta/llama-3.1-8b-instruct";
+        const quickSwitchButtons = document.querySelectorAll(".quick-switch-button");
+        function switchMode() {
+            TEXT_MODE_ELEMENTS.forEach(id => {
+                document.getElementById(id).style.display = mode === "text" ? "flex" : "none"; // why tf is hidden unstable??
+            });
+            IMAGE_MODE_ELEMENTS.forEach(id => {
+                document.getElementById(id).style.display = mode === "image" ? "flex" : "none";
+            });
 
-                quickSwitches.style.display = "none";
-                textSection.style.display = "block";
-                imageSection.style.display = "none";
-            } else if (modeValue === "image") {
-                modelInput.value = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
-
-                quickSwitches.style.display = "flex";
-                textSection.style.display = "none";
-                imageSection.style.display = "block";
+            if (mode === "text") {
+                document.getElementById("model-selector").value = "@cf/meta/llama-3.1-8b-instruct";
+                quickSwitchButtons[0].innerHTML = "Llama 3.1 8B";
+                quickSwitchButtons[0].setAttribute("data-model", "@cf/meta/llama-3.1-8b-instruct");
+                quickSwitchButtons[1].innerHTML = "Gemma 7B";
+                quickSwitchButtons[1].setAttribute("data-model", "@hf/google/gemma-7b-it");
+                quickSwitchButtons[2].innerHTML = "Hermes 2 Pro";
+                quickSwitchButtons[2].setAttribute("data-model", "@hf/nousresearch/hermes-2-pro-mistral-7b");
+            } else if (mode === "image") {
+                document.getElementById("model-selector").value = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+                quickSwitchButtons[0].innerHTML = "SDXL";
+                quickSwitchButtons[0].setAttribute("data-model", "@cf/stabilityai/stable-diffusion-xl-base-1.0");
+                quickSwitchButtons[1].innerHTML = "SDXL Lightning";
+                quickSwitchButtons[1].setAttribute("data-model", "@cf/bytedance/stable-diffusion-xl-lightning");
+                quickSwitchButtons[2].innerHTML = "DreamShaper - 8";
+                quickSwitchButtons[2].setAttribute("data-model", "@cf/lykon/dreamshaper-8-lcm");
             }
+        }
+
+        mode = "text";
+        switchMode();
+        document.getElementById("mode-selector").addEventListener("change", () => {
+            mode = document.getElementById("mode-selector").value;
+            switchMode();
+            updateActiveQuickSwitchButton();
         });
 
-        // Get all the model buttons
-        const modelButtons = document.querySelectorAll(".model-button");
-
-        // Add event listener to each model button
-        modelButtons.forEach((button) => {
+        // quick switch buttons' function
+        quickSwitchButtons.forEach(button => {
             button.addEventListener("click", () => {
-                // Remove active class from all model buttons
-                modelButtons.forEach((btn) => {
-                    btn.classList.remove("active");
-                });
-
-                // Add active class to the clicked model button
-                button.classList.add("active");
-
-                // Get the selected model from the data-model attribute
-                const selectedModel = button.getAttribute("data-model");
-
-                // Set the selected model as the value of the model input
-                document.getElementById("model").value = selectedModel;
+                document.getElementById("model-selector").value = button.getAttribute("data-model");
+                updateActiveQuickSwitchButton();
             });
         });
 
-        // send the request
-        document.getElementById("send").addEventListener("click", () => {
-            // Get the selected mode and model
-            const mode = document.getElementById("mode").value;
-            const model = document.getElementById("model").value;
-            const prompt = document.getElementById("prompt").value;
+        // update active button upon manual model change
+        function updateActiveQuickSwitchButton() {
+            quickSwitchButtons.forEach(button => {
+                if (button.getAttribute("data-model") === document.getElementById("model-selector").value) {
+                    button.classList.add("active");
+                } else {
+                    button.classList.remove("active");
+                }
+            });
+        }
 
-            // Fetch data from the API based on input values
-            if (mode === "text") {
-                document.getElementById("text-hint").innerHTML = "Text (Loading...):";
-                document.getElementById("text-result").innerHTML = "Text mode currently in development...";
-                document.getElementById("text-hint").innerHTML = "Text:";
-                // fetch("https://api.example.com", {
-                //     method: "POST",
-                //     headers: {
-                //         "Content-Type": "application/json"
-                //     },
-                //     body: JSON.stringify({
-                //         model,
-                //         prompt
-                //     })
-                // })
-                // .then(response => response.json())
-                // .then(data => {
-                //     // Display the results
-                //     console.log(data);
-                //     // Update the UI with the results
-                //     // ...
-                // })
-                // .catch(error => {
-                //     console.error(error);
-                //     // Handle error
-                //     // ...
-                // });
-            } else if (mode === "image") {
-                document.getElementById("image-hint").innerHTML = "Images (Loading... Please wait for a few seconds):";
-                const storedPrompt = prompt;
-                fetch("https://sdxl.fengzi.workers.dev/?p=" + encodeURIComponent(prompt) + "&m=" + encodeURIComponent(model), {
-                    method: "GET",
-                })
-                .then(response => response.blob())
-                .then(blob => {
-                    const imageURL = URL.createObjectURL(blob);
-                    const imageResults = document.getElementById("image-results");
-                    const imageElement = document.createElement("img");
-                    imageElement.src = imageURL;
-                    imageElement.title = storedPrompt;
-                    imageElement.alt = storedPrompt;
-                    imageResults.insertBefore(imageElement, imageResults.firstChild);
+        // queue display system
+        let textQueue = 0;
+        let imageQueue = 0;
+        function updateHints() {
+            document.getElementById("text-hint").innerHTML = textQueue === 0 ? "Text:" : "Text (Loading... Current queue: " + textQueue + ". Please wait for a few seconds):";
+            document.getElementById("image-hint").innerHTML = imageQueue === 0 ? "Images:" : "Images (Loading... Current queue: " + imageQueue + ". Please wait for a few seconds):";
+        };
+        document.getElementById("model-selector").addEventListener("input", updateActiveQuickSwitchButton);
+        updateActiveQuickSwitchButton();
 
-                    document.getElementById("image-hint").innerHTML = "Images:";
-                })
-                .catch(error => {
-                    console.error(error);
-                    document.getElementById("image-hint").innerHTML = error.message;
-                });
-            } else {
-                console.error("invalid mode");
+        // new text message
+        const textResults = document.getElementById("text-results");
+        function showLastTextMessage() {
+            const textElement = document.createElement("p");
+            const newMessage = textHistory[textHistory.length - 1];
+            textElement.innerHTML = newMessage.content;
+            textElement.classList.add("text-message");
+            textElement.classList.add(newMessage.user ? "user-message" : "model-message");
+            textResults.appendChild(textElement);
+            window.scrollTo(0, document.body.scrollHeight);
+            return textElement;
+        }
+
+        // ctrl + enter to send
+        document.addEventListener("keydown", event => {
+            if (event.ctrlKey && event.key === "Enter") {
+                let theButton = "";
+                if (mode === "text") theButton = "text-send-button";
+                else if (mode === "image") theButton = "image-generate-button";
+                document.getElementById(theButton).click();
             }
+        });
+
+        // send text request
+        document.getElementById("text-send-button").addEventListener("click", () => {
+            // get the values
+            const model = document.getElementById("model-selector").value;
+            const systemPrompt = document.getElementById("system-prompt-input").value;
+            const modelRole = document.getElementById("model-role-input").value;
+            const userRole = document.getElementById("user-role-input").value;
+            const message = document.getElementById("text-message-input").value.trim();
+
+            // clear the input
+            document.getElementById("text-message-input").value = "";
+
+            // special commands
+            switch (message) {
+                case "SHOW CREDITS":
+                case "SHOW ABOUT":
+                    alert("simple-ai-wrapper\nby fengzi\na simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help\nobviously a small side project\nfor more cool stuff visit https://fengzi.dev");
+                    return;
+                case "SHOW ROADMAP":
+                    alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify individual text messages\n- Delete generated images\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting");
+                    return;
+                case "SHOW CHANGELOG":
+                    alert("v1.0:\n- Made this thingy\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like this\n- More more jump");
+                    return;
+                case "SHOW LICENSE":
+                case "SHOW LICENSES":
+                    alert("simple-ai-wrapper\n\nCopyright 2024 Fengzi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Marked\n\nCopyright (c) 2018+, MarkedJS (https://github.com/markedjs/)\nCopyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Markdown\n\nCopyright © 2004, John Gruber\nhttp://daringfireball.net/\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nThis software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.");
+                    return;
+                case "CLEAR TEXT":
+                case "CLEAR MESSAGES":
+                case "CLEAR CHAT":
+                case "CLEAR HISTORY":
+                    textHistory = [];
+                    textResults.innerHTML = "";
+                    return;
+                case "CLEAR IMAGES":
+                    document.getElementById("image-results").innerHTML = "";
+                    return;
+                case "SHOW HELP":
+                case "HELP":
+                    alert("Commands:\n- SHOW ABOUT\n- SHOW ROADMAP\n- SHOW CHANGELOG\n- SHOW LICENSES\n- CLEAR HISTORY\n- CLEAR IMAGES\n- HELP (sorry if u bumped into this by accident, not sorry, xd)");
+                    return;
+            }
+
+            // add new user msg to history
+            textHistory.push({ user: true, content: message });
+            showLastTextMessage();
+
+            // prepare data to send to the llm
+            const fullPrompt = [{ role: "system", content: systemPrompt }];
+            textHistory.forEach(item => {
+                if (item.user) fullPrompt.push({ role: userRole, content: item.content });
+                else fullPrompt.push({ role: modelRole, content: item.content });
+            });
+
+            const requestBody = {
+                model,
+                options: {
+                    messages: fullPrompt,
+                    stream: true,
+                }
+            }
+
+            // send request
+            textQueue++;
+            updateHints();
+
+            fetch("https://ai-endpoint.fengzi.workers.dev/", {
+                method: "POST",
+                body: JSON.stringify(requestBody)
+            })
+            .then(async response => {
+                // add new responding model msg
+                textHistory.push({ user: false, content: "" });
+                const respondingElement = showLastTextMessage();
+                let respondingText = "";
+
+                // sse decode magic took me a whole day to figure out
+                // the below logic is running in beta, i will leave debug code inside to detect unexpected patterns and behaviors from data
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let readerDone = false; // double safeguard
+                let dataDone = false;
+                while (!readerDone && !dataDone) {
+                    let { value, done } = await reader.read();
+                    readerDone = done;
+                    const chunk = decoder.decode(value, { stream: true });
+                    const unsafePayloads = chunk.split("data: ");
+                    unsafePayloads.shift();
+                    if (unsafePayloads.length !== 1) console.warn("WARNING: unusual unsafe payloads count in one chunk\n", chunk); // DEBUG
+                    unsafePayloads.forEach(unsafePayload => {
+                        if (unsafePayload.startsWith("{\"response\":\"")) { // sneaky little tomfoolery trolling thingamabob
+                            // likely actual payload (man i hate this sse method they just send text)
+                            if (!(unsafePayload.trim().endsWith("\"}"))) console.warn("WARNING: payloads starts with json response but did not close\n", unsafePayload); // DEBUG
+                            try {
+                                const data = JSON.parse(unsafePayload);
+                                respondingText += data.response;
+                                respondingElement.innerHTML = marked.parse(respondingText); // EXPERIMENTAL
+                            } catch (error) {
+                                console.error("ERROR: failed to parse json in assumed actual safe payload\n", unsafePayload, error); // DEBUG
+                            }
+                        } else if (unsafePayload.startsWith("[DONE]")) {
+                            // very likely done
+                            textHistory[textHistory.length - 1].content = respondingText;
+                            textQueue--;
+                            updateHints();
+                            dataDone = true;
+                            console.log("DEBUG: data done return: \n reader done", readerDone, "data done", dataDone); // DEBUG
+                            return;
+                        } else {
+                            console.warn("WARNING: unknown payload type\n", unsafePayload); // DEBUG
+                        }
+                    });
+                    if (readerDone) console.warn("WARNING: using readerDone (unsafePayloads foreach function didn't return out the entire loop, which is maybe expected behavior). is concerning if there isn't data done notice on top ^"); // DEBUG
+                    if (readerDone && !dataDone) console.warn("WARNING: confirmed reader done without data done"); // DEBUG
+                }
+            })
+            .catch(error => {
+                console.error("ERROR: entire response handling logic throws an unhandled exception\n", error, "\nrequest body used:\n", JSON.stringify(requestBody)); // DEBUG
+                document.getElementById("text-hint").innerHTML = error.message;
+                textQueue--;
+            })
+        });
+
+        // send image request
+        document.getElementById("image-generate-button").addEventListener("click", () => {
+            const model = document.getElementById("model-selector").value;
+            const prompt = document.getElementById("image-prompt-input").value;
+
+            const requestBody = {
+                model,
+                options: {
+                    prompt,
+                }
+            }
+
+            imageQueue++;
+            updateHints();
+
+            fetch("https://ai-endpoint.fengzi.workers.dev/", {
+                method: "POST",
+                body: JSON.stringify()
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const imageURL = URL.createObjectURL(blob);
+                const imageResults = document.getElementById("image-results");
+                const imageElement = document.createElement("img");
+                imageElement.src = imageURL;
+                imageElement.title = prompt;
+                imageElement.alt = "Generated image: " + prompt;
+                imageResults.insertBefore(imageElement, imageResults.firstChild);
+
+                imageQueue--;
+                updateHints();
+            })
+            .catch(error => {
+                console.error("ERROR: entire response handling logic throws an unhandled exception\n", error, "\nrequest body used:\n", JSON.stringify(requestBody));
+                document.getElementById("image-hint").innerHTML = error.message;
+                imageQueue--;
+            });
         });
     </script>
 </body>
