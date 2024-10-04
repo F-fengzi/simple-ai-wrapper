@@ -9,7 +9,7 @@
     <title>simple-ai-wrapper</title>
     <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
     <meta name="author" content="fengzi">
-    <meta name="version" content="2.1">
+    <meta name="version" content="2.0">
     <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
     <style>
         :root {
@@ -69,7 +69,6 @@
         #system-prompt-input {
             width: 100%;
             height: 2rem;
-            min-height: 2rem;
             box-sizing: border-box;
             resize: vertical;
         }
@@ -132,11 +131,8 @@
             margin: 0;
             padding: 0.5rem 1rem;
             max-width: 36rem;
-            min-height: 2rem;
             box-sizing: border-box;
             border-radius: 8px;
-            font-size: 16px;
-            font-family: sans-serif;
             word-break: break-word;
             box-shadow: 0 3px 6px rgba(10, 10, 9, 0.05);
         }
@@ -194,7 +190,7 @@
         }
         /* ------------------------------ */
         @media (prefers-color-scheme: dark) {
-            body, select, input, textarea, button {
+            * {
                 background-color: #16130f;
                 color: #eee;
             }
@@ -261,7 +257,7 @@
     <div id="top-quick-switches">
         <button class="quick-switch-button" data-model="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</button>
         <button class="quick-switch-button" data-model="@hf/google/gemma-7b-it">Gemma 7B</button>
-        <button class="quick-switch-button" data-model="@cf/qwen/qwen1.5-14b-chat-awq">Qwen1.5 14B</button>
+        <button class="quick-switch-button" data-model="@hf/nousresearch/hermes-2-pro-mistral-7b">Hermes 2 Pro</button>
     </div>
     <div id="results-display">
         <div id="text-section">
@@ -275,7 +271,7 @@
         </div>
     </div>
     <div id="bottom-message-box">
-        <textarea id="text-message-input" placeholder="Type to model" autofocus></textarea>
+        <textarea id="text-message-input" placeholder="Type to model (Ctrl + Enter to send)" autofocus></textarea>
         <button id="text-send-button">Send</button>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
@@ -303,8 +299,8 @@
                 quickSwitchButtons[0].setAttribute("data-model", "@cf/meta/llama-3.1-8b-instruct");
                 quickSwitchButtons[1].innerHTML = "Gemma 7B";
                 quickSwitchButtons[1].setAttribute("data-model", "@hf/google/gemma-7b-it");
-                quickSwitchButtons[2].innerHTML = "Qwen1.5 14B";
-                quickSwitchButtons[2].setAttribute("data-model", "@cf/qwen/qwen1.5-14b-chat-awq");
+                quickSwitchButtons[2].innerHTML = "Hermes 2 Pro";
+                quickSwitchButtons[2].setAttribute("data-model", "@hf/nousresearch/hermes-2-pro-mistral-7b");
             } else if (mode === "image") {
                 document.getElementById("model-selector").value = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
                 quickSwitchButtons[0].innerHTML = "SDXL";
@@ -366,38 +362,14 @@
             return textElement;
         }
 
-        // shift + enter system default (normally newline), ctrl + enter to send, enter is auto, and some hints to command input
+        // ctrl + enter to send
         document.addEventListener("keydown", event => {
-            const textMessageInput = document.getElementById("text-message-input");
-            // to send:
-            if (event.key === "Enter" && // enter is pressed
-                textMessageInput.value.trim() !== "" && // message must not be empty
-                !(event.shiftKey) && // shift must not be pressed
-                (event.ctrlKey || // either ctrl is pressed
-                !(textMessageInput.value.includes("\n"))) // or nothing needs to be pressed but there isn't already a newline, in which case Enter enters newline mode
-            ) {
-                event.preventDefault();
-                // click the BUTTON
+            if (event.ctrlKey && event.key === "Enter") {
                 let theButton = "";
                 if (mode === "text") theButton = "text-send-button";
                 else if (mode === "image") theButton = "image-generate-button";
                 document.getElementById(theButton).click();
-
-            // slash key focus and command hint
-            } else if (event.key === "/") {
-                event.preventDefault();
-                textMessageInput.focus();
-                textMessageInput.value += "/";
             }
-            const textSendButton = document.getElementById("text-send-button");
-            setTimeout(() => {
-                if (textMessageInput.value.startsWith("/")) {
-                    textSendButton.innerHTML = "Magic?";
-                } else {
-                    textSendButton.innerHTML = "Send";
-                }
-            }, 0);
-            
         });
 
         // send text request
@@ -413,31 +385,34 @@
             document.getElementById("text-message-input").value = "";
 
             // special commands
-            switch (message.toUpperCase()) {
-                case "/CREDITS":
-                case "/ABOUT":
+            switch (message) {
+                case "SHOW CREDITS":
+                case "SHOW ABOUT":
                     alert("simple-ai-wrapper\nby fengzi\na simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help\nobviously a small side project\nfor more cool stuff visit https://fengzi.dev");
                     return;
-                case "/ROADMAP":
+                case "SHOW ROADMAP":
                     alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify individual text messages\n- Delete generated images\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting");
                     return;
-                case "/CHANGELOG":
-                    alert("v1.0:\n- Made this thingy\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like this\n- More more jump\nv2.1:\n- Important bug fixes and UI optimizations\n- Optimize send and newline keyboard behavior\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons");
+                case "SHOW CHANGELOG":
+                    alert("v1.0:\n- Made this thingy\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like this\n- More more jump");
                     return;
-                case "/LICENSE":
-                case "/LICENSES":
+                case "SHOW LICENSE":
+                case "SHOW LICENSES":
                     alert("simple-ai-wrapper\n\nCopyright 2024 Fengzi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Marked\n\nCopyright (c) 2018+, MarkedJS (https://github.com/markedjs/)\nCopyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Markdown\n\nCopyright © 2004, John Gruber\nhttp://daringfireball.net/\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nThis software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.");
                     return;
-                case "/CLEAR":
-                case "/CLEAR TEXT":
+                case "CLEAR TEXT":
+                case "CLEAR MESSAGES":
+                case "CLEAR CHAT":
+                case "CLEAR HISTORY":
                     textHistory = [];
                     textResults.innerHTML = "";
                     return;
-                case "/CLEAR IMAGES":
+                case "CLEAR IMAGES":
                     document.getElementById("image-results").innerHTML = "";
                     return;
-                case "/HELP":
-                    alert("Commands:\n- /about\n- /roadmap\n- /changelog\n- /licenses\n- /clear\n- /clear images\n- /help (sorry if u bumped into this by accident, not sorry, xd)");
+                case "SHOW HELP":
+                case "HELP":
+                    alert("Commands:\n- SHOW ABOUT\n- SHOW ROADMAP\n- SHOW CHANGELOG\n- SHOW LICENSES\n- CLEAR HISTORY\n- CLEAR IMAGES\n- HELP (sorry if u bumped into this by accident, not sorry, xd)");
                     return;
             }
 
@@ -492,10 +467,9 @@
                             // likely actual payload (man i hate this sse method they just send text)
                             if (!(unsafePayload.trim().endsWith("\"}"))) console.warn("WARNING: payloads starts with json response but did not close\n", unsafePayload); // DEBUG
                             try {
-                                const data = JSON.parse(unsafePayload); // parse
-                                respondingText += data.response; // add data
-                                respondingElement.innerHTML = marked.parse(respondingText); // EXPERIMENTAL: replace ui with parsed markdown
-                                if ((window.innerHeight + window.scrollY + 64) >= document.body.offsetHeight) window.scrollTo(0, document.body.scrollHeight); // scroll to bottom if close to bottom
+                                const data = JSON.parse(unsafePayload);
+                                respondingText += data.response;
+                                respondingElement.innerHTML = marked.parse(respondingText); // EXPERIMENTAL
                             } catch (error) {
                                 console.error("ERROR: failed to parse json in assumed actual safe payload\n", unsafePayload, error); // DEBUG
                             }
@@ -539,7 +513,7 @@
 
             fetch("https://ai-endpoint.fengzi.workers.dev/", {
                 method: "POST",
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify()
             })
             .then(response => response.blob())
             .then(blob => {
