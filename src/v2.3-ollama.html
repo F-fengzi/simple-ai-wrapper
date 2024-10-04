@@ -1,0 +1,678 @@
+<!-- The following code is provided under the MIT License. Copyright 2024 Fengzi. -->
+<!-- As part of the MIT License, any deriatives must give credit to the mentioned copyright holder. -->
+<!-- The backend API can be very easily recreated by just following the examples provided in the Workers documentation. Mine used ~10 lines of code. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>simple-ai-wrapper</title>
+    <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
+    <meta name="author" content="fengzi">
+    <meta name="version" content="2.3">
+    <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
+    <style>
+        :root {
+            --image-count: 5;
+        }
+        html {
+            overflow-y: scroll;
+        }
+        body {
+            width: 100%;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 1.5em;
+        }
+        h2 {
+            font-size: 1.25em;
+        }
+        h3 {
+            font-size: 1.125em;
+        }
+        select, input[type="text"], textarea {
+            padding: 3px 6px;
+        }
+        /* ------------------------------ */
+        #top-controls {
+            width: 100%;
+            display: flex;
+            flex-flow: row nowrap;
+            gap: 0.5rem;
+        }
+
+        #options-column {
+            flex: 1;
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        #text-task-column {
+            flex: 2;
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        #image-task-column {
+            flex: 2;
+            display: flex;
+            flex-flow: row nowrap;
+        }
+
+        #mode-selector {
+            height: 2rem;
+            box-sizing: border-box;
+        }
+        #model-selector {
+            height: 2rem;
+            box-sizing: border-box;
+        }
+
+        #system-prompt-input {
+            width: 100%;
+            height: 4rem;
+            min-height: 4rem;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        #image-prompt-input {
+            width: 100%;
+            height: 4rem;
+            box-sizing: border-box;
+            font-size: 16px;
+            resize: none;
+        }
+        #image-generate-button {
+            width: 6rem;
+            height: 4rem;
+            box-sizing: border-box;
+            background-color: #fa9b71;
+        }
+
+        #text-hint, #image-hint {
+            margin: 0.5rem 0;
+        }
+        /* ---------- */
+        #top-quick-switches {
+            width: 100%;
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-between;
+        }
+        .quick-switch-button {
+            flex: 1;
+            height: 2rem;
+        }
+        .active {
+            background-color: #f1dcc9;
+        }
+        /* ---------- */
+        #results-display {
+            width: 100%;
+        }
+        #text-section {
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        #text-results {
+            align-self: center;
+            width: 100%;
+            max-width: 60rem;
+            display: flex;
+            flex-flow: column nowrap;
+            gap: 1rem;
+        }
+        .text-message {
+            margin: 0;
+            padding: 0.5rem 1rem;
+            max-width: 36rem;
+            min-height: 2rem;
+            box-sizing: border-box;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: sans-serif;
+            word-break: break-word;
+            box-shadow: 0 3px 6px rgba(10, 10, 9, 0.05);
+        }
+        .text-message p:first-child {
+            margin-top: 0;
+        }
+        .text-message p:last-child {
+            margin-bottom: 0;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #faeadb;
+        }
+        .model-message {
+            align-self: flex-start;
+            background-color: #faf7f3;
+        }
+        #text-required-blank-section {
+            height: 5rem;
+        }
+        #image-section {
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        #image-results {
+            width: 100%;
+            display: flex;
+            flex-flow: row wrap;
+            gap: 0.5rem;
+        }
+        #image-results img {
+            width: calc(100% / var(--image-count) - ((var(--image-count) - 1) * 0.5rem / var(--image-count)));
+        }
+        /* ---------- */
+        #bottom-message-box {
+            position: fixed;
+            left: 1rem;
+            bottom: 1rem;
+            width: calc(100% - 2rem);
+            display: flex;
+            flex-flow: row nowrap;
+        }
+        #text-message-input {
+            width: 100%;
+            min-height: 3rem;
+            box-sizing: border-box;
+            font-size: 16px;
+            resize: vertical;
+        }
+        #text-send-button {
+            width: 4rem;
+            height: 3rem;
+            box-sizing: border-box;
+            background-color: #fa9b71;
+        }
+        /* ------------------------------ */
+        @media (prefers-color-scheme: dark) {
+            body, select, input, textarea, button {
+                background-color: #16130f;
+                color: #eee;
+            }
+            #image-generate-button {
+                background-color: #c75b29;
+            }
+            .active {
+                background-color: #3b2e27;
+            }
+            .user-message {
+                background-color: #41332c;
+            }
+            .model-message {
+                background-color: #1d1b19;
+            }
+            #text-send-button {
+                background-color: #c75b29;
+            }
+        }
+        @media screen and (max-width: 90rem) {
+            :root {
+                --image-count: 4;
+            }
+        }
+        @media screen and (max-width: 70rem) {
+            :root {
+                --image-count: 3;
+            }
+        }
+        @media screen and (max-width: 50rem) {
+            :root {
+                --image-count: 2;
+            }
+        }
+        @media screen and (max-width: 36rem) {
+            #top-controls {
+                flex-flow: column nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <noscript>This thing doesn't work at all if you don't allow JavaScript.<br /><br /><br /></noscript>
+    <div id="top-controls">
+        <div id="options-column">
+            <select id="mode-selector">
+                <option value="text">Text Generation (Ollama)</option>
+                <option value="image">Image Generation</option>
+            </select>
+            <input id="model-selector" type="text" value="@cf/meta/llama-3.1-8b-instruct" placeholder="Cf-accepted model">
+        </div>
+        <div id="text-task-column">
+            <textarea id="system-prompt-input" placeholder="System prompt">You are a friendly assistant.</textarea>
+        </div>
+        <div id="image-task-column">
+            <textarea id="image-prompt-input" placeholder="Enter your prompt"></textarea>
+            <button id="image-generate-button">Generate</button>
+        </div>
+    </div>
+    <div id="top-quick-switches">
+        <button class="quick-switch-button" data-model="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</button>
+        <button class="quick-switch-button" data-model="@hf/google/gemma-7b-it">Gemma 7B</button>
+        <button class="quick-switch-button" data-model="@cf/qwen/qwen1.5-14b-chat-awq">Qwen1.5 14B</button>
+    </div>
+    <div id="results-display">
+        <div id="text-section">
+            <p id="text-hint">Text:</p>
+            <div id="text-results"></div>
+            <div id="text-required-blank-section"></div>
+        </div>
+        <div id="image-section">
+            <p id="image-hint">Images:</p>
+            <div id="image-results"></div>
+        </div>
+    </div>
+    <div id="bottom-message-box">
+        <textarea id="text-message-input" placeholder="Type to model (/help for commands)" autofocus></textarea>
+        <button id="text-send-button">Send</button>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script>
+        let mode = "text";
+        let textHistory = [];
+
+        const textResults = document.getElementById("text-results");
+        const imageResults = document.getElementById("image-results");
+        const textMessageInput = document.getElementById("text-message-input");
+        const imagePromptInput = document.getElementById("image-prompt-input");
+        const textSendButton = document.getElementById("text-send-button");
+        const imageGenerateButton = document.getElementById("image-generate-button");
+        const quickSwitchButtons = document.querySelectorAll(".quick-switch-button");
+
+        // change default model and switch elements display based on mode
+        // must be exclusive to the mode and display be "flex"
+        const TEXT_MODE_ELEMENTS = ["text-task-column", "text-section", "bottom-message-box"];
+        const IMAGE_MODE_ELEMENTS = ["image-task-column", "image-section"];
+        function switchMode() {
+            TEXT_MODE_ELEMENTS.forEach(id => {
+                document.getElementById(id).style.display = mode === "text" ? "flex" : "none"; // why tf is hidden unstable??
+            });
+            IMAGE_MODE_ELEMENTS.forEach(id => {
+                document.getElementById(id).style.display = mode === "image" ? "flex" : "none";
+            });
+
+            if (mode === "text") {
+                document.getElementById("model-selector").value = "llama3.1";
+                quickSwitchButtons[0].innerHTML = "Llama 3.1 8B";
+                quickSwitchButtons[0].setAttribute("data-model", "llama3.1");
+                quickSwitchButtons[1].innerHTML = "Gemma 2 9B";
+                quickSwitchButtons[1].setAttribute("data-model", "gemma2");
+                quickSwitchButtons[2].innerHTML = "Qwen 2 7B";
+                quickSwitchButtons[2].setAttribute("data-model", "qwen2");
+            } else if (mode === "image") {
+                document.getElementById("model-selector").value = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+                quickSwitchButtons[0].innerHTML = "SDXL";
+                quickSwitchButtons[0].setAttribute("data-model", "@cf/stabilityai/stable-diffusion-xl-base-1.0");
+                quickSwitchButtons[1].innerHTML = "SDXL Lightning";
+                quickSwitchButtons[1].setAttribute("data-model", "@cf/bytedance/stable-diffusion-xl-lightning");
+                quickSwitchButtons[2].innerHTML = "DreamShaper - 8";
+                quickSwitchButtons[2].setAttribute("data-model", "@cf/lykon/dreamshaper-8-lcm");
+            }
+        }
+        document.getElementById("mode-selector").addEventListener("change", () => {
+            mode = document.getElementById("mode-selector").value;
+            switchMode();
+            updateActiveQuickSwitchButton();
+        });
+
+        // update active button upon manual model change
+        function updateActiveQuickSwitchButton() {
+            quickSwitchButtons.forEach(button => {
+                if (button.getAttribute("data-model") === document.getElementById("model-selector").value) {
+                    button.classList.add("active");
+                } else {
+                    button.classList.remove("active");
+                }
+            });
+        }
+        document.getElementById("model-selector").addEventListener("input", updateActiveQuickSwitchButton);
+
+        switchMode();
+        updateActiveQuickSwitchButton();
+
+        // quick switch buttons' function
+        quickSwitchButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                document.getElementById("model-selector").value = button.getAttribute("data-model");
+                updateActiveQuickSwitchButton();
+            });
+        });
+
+        // queue display system
+        let textQueue = 0;
+        let imageQueue = 0;
+        function updateHints() {
+            document.getElementById("text-hint").innerHTML = textQueue === 0 ? "Text:" : "Text (Waiting... " + textQueue + " in queue):";
+            document.getElementById("image-hint").innerHTML = imageQueue === 0 ? "Images:" : "Images (Loading... Current queue: " + imageQueue + ". Please wait for a few seconds):";
+        };
+
+        // new text message in dom
+        function addLastTextMessage() {
+            const newMessage = textHistory[textHistory.length - 1];
+            const textElement = document.createElement("p");
+            textElement.innerHTML = newMessage.content;
+            textElement.classList.add("text-message");
+            textElement.classList.add(newMessage.user ? "user-message" : "model-message");
+            textResults.appendChild(textElement);
+            window.scrollTo(0, document.body.scrollHeight);
+            return textElement;
+        }
+
+        // keyboard event listener: slash key focus, button hints to command input, and enter keyboard behavior: shift + enter default (normally newline), ctrl + enter to send, enter is auto
+        document.addEventListener("keydown", event => {
+            let theInput, theButton;
+            if (event.key === "/") textMessageInput.focus();
+            if (document.activeElement === textMessageInput) {
+                theInput = textMessageInput;
+                theButton = textSendButton;
+                setTimeout(() => {
+                    if (textMessageInput.value.startsWith("/")) {
+                        textSendButton.innerHTML = "Magic?";
+                    } else {
+                        textSendButton.innerHTML = "Send";
+                    }
+                }, 1);
+            } else if (document.activeElement === imagePromptInput) {
+                theInput = imagePromptInput;
+                theButton = imageGenerateButton;
+                setTimeout(() => {
+                    if (imagePromptInput.value.startsWith("/")) {
+                        imageGenerateButton.innerHTML = "Magic?";
+                    } else {
+                        imageGenerateButton.innerHTML = "Generate";
+                    }
+                }, 1);
+            } else {
+                return;
+            }
+
+            // to send:
+            if (event.key === "Enter" && // enter is pressed
+                !(event.shiftKey) && // shift must not be pressed
+                (event.ctrlKey || // either ctrl is pressed
+                (theInput.value.trim() !== "" && !(theInput.value.includes("\n")))) // or nothing needs to be pressed but message must not be empty and there isn't already a newline, in which cases Enter enters newline mode
+            ) {
+                event.preventDefault();
+                theButton.click();
+            }
+        });
+
+        // commands
+        function handleCommands(rawInput) {
+            // Testie!! Is this you??? (the ogs will get this reference)
+            const processedOptions = rawInput.trim().substring(1).toLowerCase().split(" ");
+            switch (processedOptions[0]) {
+                case "regenerate":
+                case "g":
+                    if (textHistory.length > 0 && textHistory[textHistory.length - 1].user === false) {
+                        textHistory.splice(-1);
+                        textResults.removeChild(textResults.lastElementChild);
+                    }
+                    getModelResponse();
+                    return true;
+                case "continue":
+                case "t":
+                    getModelResponse();
+                    return true;
+                case "regret":
+                case "r":
+                    let count = mode === "text" ? 2 : 1;
+                    if (processedOptions.length >= 2) {
+                        const userCount = parseInt(processedOptions[1]);
+                        if (userCount && userCount > 0) {
+                            count = userCount;
+                        } else {
+                            alert("Not a valid count. Type '/help regret' to get more info.");
+                        }
+                    }
+                    if (mode === "text") {
+                        count = Math.min(count, textHistory.length);
+                        textHistory.splice(-count);
+                        for (let i = 0; i < count; i++) {
+                            textResults.removeChild(textResults.lastElementChild);
+                        }
+                    } else if (mode === "image") {
+                        count = Math.min(count, imageResults.children.length);
+                        for (let i = 0; i < count; i++) {
+                            imageResults.removeChild(imageResults.firstElementChild);
+                        }
+                    }
+                    return true;
+                case "clear":
+                case "c":
+                    if ((processedOptions.length === 1 && mode === "text") || (processedOptions.length >= 2 && processedOptions[1] === "text")) {
+                        textHistory = [];
+                        textResults.innerHTML = "";
+                    } else if ((processedOptions.length === 1 && mode === "image") || (processedOptions.length >= 2 && processedOptions[1] === "images")) {
+                        document.getElementById("image-results").innerHTML = "";
+                    } else {
+                        alert("Not a valid command. Type '/help clear' to get more info.");
+                    }
+                    return true;
+                case "switch":
+                case "s":
+                    mode = mode === "text" ? "image" : "text";
+                    switchMode();
+                    updateActiveQuickSwitchButton();
+                    setTimeout(() => {
+                        const theInput = mode === "text" ? textMessageInput : imagePromptInput;
+                        theInput.focus();
+                    }, 1);
+                    return true;
+                case "about":
+                case "credits":
+                    alert("simple-ai-wrapper\nby fengzi\na simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help\nobviously a small side project\nfor more cool stuff visit https://fengzi.dev");
+                    return true;
+                case "roadmap":
+                    alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify individual text messages\n- Delete generated images\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting\n- Make ai reply as user");
+                    return true;
+                case "changelog":
+                    alert("v2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
+                    return true;
+                case "licenses":
+                case "license":
+                    alert("simple-ai-wrapper\n\nCopyright 2024 Fengzi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Marked\n\nCopyright (c) 2018+, MarkedJS (https://github.com/markedjs/)\nCopyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Markdown\n\nCopyright © 2004, John Gruber\nhttp://daringfireball.net/\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nThis software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.");
+                    return true;
+                case "help":
+                case "h":
+                    if (processedOptions.length >= 2) {
+                        switch (processedOptions[1]) {
+                            case "regenerate":
+                                alert("/regenerate\n\nRegenerate the last response in text mode. You can also use this to let the model start the first message.");
+                                break;
+                            case "continue":
+                                alert("/continue\n\nLet the model continue to generate another message in text mode. You can also use this to let it start the first message.");
+                                break;
+                            case "regret":
+                                alert("/regret [count]\n\nRemove the last [count] results in the current mode. (In text mode, this includes both model and user messages.) [count] must be a positive integer. Default is 2 in text mode and 1 in image mode.");
+                                break;
+                            case "clear":
+                                alert("/clear [mode]\n\nClear all results in the specified mode (text or images). Default is the current mode.");
+                                break;
+                            case "switch":
+                                alert("/switch\n\nSwitch between text and image modes.");
+                                break;
+                            case "about":
+                                alert("/about\n\nShow info about this project.");
+                                break;
+                            case "roadmap":
+                                alert("/roadmap\n\nShow the list planned features they may get added in the future.");
+                                break;
+                            case "changelog":
+                                alert("/changelog\n\nShow the list of changes over each version.");
+                                break;
+                            case "licenses":
+                                alert("/licenses\n\nShow the license of this project and the licenses of open-source libraries used in this project.");
+                                break;
+                            case "help":
+                                alert("/help [command]\n\nShow the usage of the specified [command]. If [command] not set, show the list of all available commands.");
+                                break;
+                            default:
+                                alert("Not a valid command. Type '/help' to see a list of all available commands.");
+                        }
+                    } else {
+                        alert("Commands:\n- /regenerate (/g)\n- /continue (/t)\n- /regret (/r)\n- /regret (/r) [count]\n- /clear (/c)\n- /clear (/c) [\"text\"/\"images\"]\n- /switch (/s)\n- /about\n- /roadmap\n- /changelog\n- /licenses\n- /help (/h)\n- /help (/h) [command]");
+                    }
+                    return true;
+                case "egg":
+                    alert("egg");
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        // get text mode model response and put it in a new text message
+        function getModelResponse() {
+            // get the values
+            const model = document.getElementById("model-selector").value;
+            const systemPrompt = document.getElementById("system-prompt-input").value;
+
+            // prepare data to send to the llm
+            const fullPrompt = [{ role: "system", content: systemPrompt }];
+            textHistory.forEach(item => {
+                if (item.user) fullPrompt.push({ role: "user", content: item.content });
+                else fullPrompt.push({ role: "assistant", content: item.content });
+            });
+
+            const requestBody = {
+                model,
+                messages: fullPrompt
+            }
+
+            // send request
+            textQueue++;
+            updateHints();
+
+            fetch("http://localhost:11434/api/chat", {
+                method: "POST",
+                body: JSON.stringify(requestBody)
+            })
+            .then(async response => {
+                // add new responding model msg
+                textHistory.push({ user: false, content: "" });
+                const currentHistoryItem = textHistory[textHistory.length - 1];
+                const respondingElement = addLastTextMessage();
+                let respondingText = "";
+
+                // sse decode magic took me a whole day to figure out
+                // the below logic is running in beta, i will leave debug code inside to detect unexpected patterns and behaviors from data
+                // specially crafted for local ollama
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let readerDone = false, dataDone = false; // double safeguard
+                while (!readerDone && !dataDone) {
+                    let { value, done } = await reader.read();
+                    readerDone = done;
+                    const chunk = decoder.decode(value, { stream: true });
+                    try {
+                        const data = JSON.parse(chunk); // parse
+                        respondingText += data.message.content; // add data
+                        respondingElement.innerHTML = marked.parse(respondingText); // EXPERIMENTAL: replace ui with parsed markdown
+                        if ((window.innerHeight + window.scrollY + 64) >= document.body.offsetHeight) window.scrollTo(0, document.body.scrollHeight); // scroll to bottom if close to bottom
+                        // if done
+                        if (data.done) {
+                            currentHistoryItem.content = respondingText;
+                            textQueue--;
+                            updateHints();
+                            dataDone = true;
+                            return;
+                        }
+                    } catch (error) {
+                        console.error("ERROR: failed to parse json in assumed actual safe payload\n", chunk, error); // DEBUG
+                    }
+                    if (readerDone) console.warn("WARNING: using readerDone (chunks foreach function didn't return out the entire loop, which is maybe expected behavior). is concerning if there isn't data done notice on top ^"); // DEBUG
+                    if (readerDone && !dataDone) console.warn("WARNING: confirmed reader done without data done"); // DEBUG
+                }
+            })
+            .catch(error => {
+                console.error("ERROR: entire response handling logic throws an unhandled exception\n", error, "\nrequest body used:\n", JSON.stringify(requestBody)); // DEBUG
+                document.getElementById("text-hint").innerHTML = error.message;
+                textQueue--;
+            });
+        }
+
+        // new text request
+        textSendButton.addEventListener("click", () => {
+            // get the message and clear input
+            const message = textMessageInput.value.trim();
+            textMessageInput.value = "";
+
+            // special commands
+            if (message.startsWith("/")) {
+                if (handleCommands(message)) {
+                    return;
+                } else {
+                    setTimeout(() => {
+                        textSendButton.innerHTML = "Not magic";
+                    }, 1);
+                }
+            }
+
+            // add new user msg to history
+            textHistory.push({ user: true, content: message });
+            addLastTextMessage();
+
+            // focus back on input
+            textMessageInput.focus();
+
+            // generate model response
+            getModelResponse();
+        });
+
+        // new image request
+        imageGenerateButton.addEventListener("click", () => {
+            const model = document.getElementById("model-selector").value;
+            const prompt = imagePromptInput.value;
+
+            if (prompt.startsWith("/")) {
+                if (handleCommands(prompt)) {
+                    imagePromptInput.value = "";
+                    return;
+                } else {
+                    setTimeout(() => {
+                        imageGenerateButton.innerHTML = "Not magic";
+                    }, 1);
+                }
+            }
+
+            const requestBody = {
+                model,
+                options: {
+                    prompt
+                }
+            }
+
+            imageQueue++;
+            updateHints();
+
+            fetch("https://ai-endpoint.fengzi.workers.dev/", {
+                method: "POST",
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const imageURL = URL.createObjectURL(blob);
+                const imageElement = document.createElement("img");
+                imageElement.src = imageURL;
+                imageElement.title = prompt;
+                imageElement.alt = "Generated image: " + prompt;
+                imageResults.insertBefore(imageElement, imageResults.firstChild);
+
+                imageQueue--;
+                updateHints();
+            })
+            .catch(error => {
+                console.error("ERROR: entire response handling logic throws an unhandled exception\n", error, "\nrequest body used:\n", JSON.stringify(requestBody));
+                document.getElementById("image-hint").innerHTML = error.message;
+                imageQueue--;
+            });
+        });
+    </script>
+</body>
+</html>
