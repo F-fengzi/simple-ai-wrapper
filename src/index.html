@@ -9,7 +9,7 @@
     <title>simple-ai-wrapper</title>
     <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
     <meta name="author" content="fengzi">
-    <meta name="version" content="2.3">
+    <meta name="version" content="2.4">
     <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
     <style>
         :root {
@@ -23,15 +23,6 @@
             margin: 0;
             padding: 1rem;
             box-sizing: border-box;
-        }
-        h1 {
-            font-size: 1.5em;
-        }
-        h2 {
-            font-size: 1.25em;
-        }
-        h3 {
-            font-size: 1.125em;
         }
         select, input[type="text"], textarea {
             padding: 3px 6px;
@@ -143,6 +134,18 @@
         .text-message p:last-child {
             margin-bottom: 0;
         }
+        .text-message h1 {
+            font-size: 1.5em;
+        }
+        .text-message h2 {
+            font-size: 1.25em;
+        }
+        .text-message h3 {
+            font-size: 1.125em;
+        }
+        .text-message em {
+            color: #777777;
+        }
         .user-message {
             align-self: flex-end;
             background-color: #faeadb;
@@ -201,6 +204,9 @@
             .active {
                 background-color: #3b2e27;
             }
+            .text-message em {
+                color: #aaaaaa;
+            }
             .user-message {
                 background-color: #41332c;
             }
@@ -241,7 +247,7 @@
                 <option value="text">Text Generation</option>
                 <option value="image">Image Generation</option>
             </select>
-            <input id="model-selector" type="text" value="@cf/meta/llama-3.1-8b-instruct" placeholder="Cf-accepted model">
+            <input id="model-selector" type="text" value="@cf/meta/llama-3.2-3b-instruct" placeholder="Cf-accepted model">
         </div>
         <div id="text-task-column">
             <textarea id="system-prompt-input" placeholder="System prompt">You are a friendly assistant.</textarea>
@@ -252,8 +258,8 @@
         </div>
     </div>
     <div id="top-quick-switches">
+        <button class="quick-switch-button" data-model="@cf/meta/llama-3.2-3b-instruct">Llama 3.2 3B</button>
         <button class="quick-switch-button" data-model="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</button>
-        <button class="quick-switch-button" data-model="@hf/google/gemma-7b-it">Gemma 7B</button>
         <button class="quick-switch-button" data-model="@cf/qwen/qwen1.5-14b-chat-awq">Qwen1.5 14B</button>
     </div>
     <div id="results-display">
@@ -271,7 +277,7 @@
         <textarea id="text-message-input" placeholder="Type to model (/help for commands)" autofocus></textarea>
         <button id="text-send-button">Send</button>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="./marked.min.js" defer></script>
     <script>
         let mode = "text";
         let textHistory = [];
@@ -297,11 +303,11 @@
             });
 
             if (mode === "text") {
-                document.getElementById("model-selector").value = "@cf/meta/llama-3.1-8b-instruct";
-                quickSwitchButtons[0].innerHTML = "Llama 3.1 8B";
-                quickSwitchButtons[0].setAttribute("data-model", "@cf/meta/llama-3.1-8b-instruct");
-                quickSwitchButtons[1].innerHTML = "Gemma 7B";
-                quickSwitchButtons[1].setAttribute("data-model", "@hf/google/gemma-7b-it");
+                document.getElementById("model-selector").value = "@cf/meta/llama-3.2-3b-instruct";
+                quickSwitchButtons[0].innerHTML = "Llama 3.2 3B";
+                quickSwitchButtons[0].setAttribute("data-model", "@cf/meta/llama-3.2-3b-instruct");
+                quickSwitchButtons[1].innerHTML = "Llama 3.1 8B";
+                quickSwitchButtons[1].setAttribute("data-model", "@cf/meta/llama-3.1-8b-instruct");
                 quickSwitchButtons[2].innerHTML = "Qwen1.5 14B";
                 quickSwitchButtons[2].setAttribute("data-model", "@cf/qwen/qwen1.5-14b-chat-awq");
             } else if (mode === "image") {
@@ -472,7 +478,7 @@
                     alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify individual text messages\n- Delete generated images\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting\n- Make ai reply as user");
                     return true;
                 case "changelog":
-                    alert("v2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
+                    alert("v2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
                     return true;
                 case "licenses":
                 case "license":
