@@ -1,4 +1,4 @@
-<!-- The following code is provided under the MIT License. Copyright 2025 Fengzi. -->
+<!-- The following code is provided under the MIT License. Copyright 2024 Fengzi. -->
 <!-- As part of the MIT License, any deriatives must give credit to the mentioned copyright holder. -->
 <!-- The backend API can be very easily recreated by just following the examples provided in the Workers documentation. Mine used ~10 lines of code. -->
 <!DOCTYPE html>
@@ -9,7 +9,7 @@
     <title>simple-ai-wrapper</title>
     <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
     <meta name="author" content="fengzi">
-    <meta name="version" content="2.6">
+    <meta name="version" content="2.5">
     <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
     <style>
         :root {
@@ -411,8 +411,8 @@
         // commands
         function handleCommands(rawInput) {
             // Testie!! Is this you??? (the ogs will get this reference)
-            const processedOptions = rawInput.trim().substring(1).split(" ");
-            switch (processedOptions[0].toLowerCase()) {
+            const processedOptions = rawInput.trim().substring(1).toLowerCase().split(" ");
+            switch (processedOptions[0]) {
                 case "regenerate":
                 case "g":
                     if (textHistory.length > 0 && textHistory[textHistory.length - 1].user === false) {
@@ -424,16 +424,6 @@
                 case "continue":
                 case "t":
                     getModelResponse();
-                    return true;
-                case "edit":
-                case "e":
-                    if (textHistory.length > 0) {
-                        const editTo = processedOptions.slice(1).join(" ");
-                        textHistory[textHistory.length - 1].content = editTo;
-                        textResults.lastElementChild.innerHTML = marked.parse(editTo);
-                    } else {
-                        alert("No message to edit.");
-                    }
                     return true;
                 case "regret":
                 case "r":
@@ -461,10 +451,10 @@
                     return true;
                 case "clear":
                 case "c":
-                    if ((processedOptions.length === 1 && mode === "text") || (processedOptions.length >= 2 && processedOptions[1].toLowerCase() === "text")) {
+                    if ((processedOptions.length === 1 && mode === "text") || (processedOptions.length >= 2 && processedOptions[1] === "text")) {
                         textHistory = [];
                         textResults.innerHTML = "";
-                    } else if ((processedOptions.length === 1 && mode === "image") || (processedOptions.length >= 2 && processedOptions[1].toLowerCase() === "images")) {
+                    } else if ((processedOptions.length === 1 && mode === "image") || (processedOptions.length >= 2 && processedOptions[1] === "images")) {
                         document.getElementById("image-results").innerHTML = "";
                     } else {
                         alert("Not a valid command. Type '/help clear' to get more info.");
@@ -485,27 +475,24 @@
                     alert("simple-ai-wrapper\nby fengzi\na simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help\nobviously a small side project\nfor more cool stuff visit https://fengzi.dev");
                     return true;
                 case "roadmap":
-                    alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify any text message or image\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting\n- Make ai reply as user");
+                    alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify individual text messages\n- Delete generated images\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting\n- Make ai reply as user");
                     return true;
                 case "changelog":
-                    alert("v2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
+                    alert("v2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
                     return true;
                 case "licenses":
                 case "license":
-                    alert("simple-ai-wrapper\n\nCopyright 2025 Fengzi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Marked\n\nCopyright (c) 2018+, MarkedJS (https://github.com/markedjs/)\nCopyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Markdown\n\nCopyright © 2004, John Gruber\nhttp://daringfireball.net/\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nThis software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.");
+                    alert("simple-ai-wrapper\n\nCopyright 2024 Fengzi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Marked\n\nCopyright (c) 2018+, MarkedJS (https://github.com/markedjs/)\nCopyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Markdown\n\nCopyright © 2004, John Gruber\nhttp://daringfireball.net/\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nThis software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.");
                     return true;
                 case "help":
                 case "h":
                     if (processedOptions.length >= 2) {
-                        switch (processedOptions[1].toLowerCase()) {
+                        switch (processedOptions[1]) {
                             case "regenerate":
                                 alert("/regenerate\n\nRegenerate the last response in text mode. You can also use this to let the model start the first message.");
                                 break;
                             case "continue":
                                 alert("/continue\n\nLet the model continue to generate another message in text mode. You can also use this to let it start the first message.");
-                                break;
-                            case "edit":
-                                alert("/edit [message]\n\nEdit the last message in the chat history. (This can be either a model or user message.)");
                                 break;
                             case "regret":
                                 alert("/regret [count]\n\nRemove the last [count] results in the current mode. (In text mode, this includes both model and user messages.) [count] must be a positive integer. Default is 2 in text mode and 1 in image mode.");
@@ -535,7 +522,7 @@
                                 alert("Not a valid command. Type '/help' to see a list of all available commands.");
                         }
                     } else {
-                        alert("Commands:\n- /regenerate (/g)\n- /continue (/t)\n- /edit (/e) [message]\n- /regret (/r)\n- /regret (/r) [count]\n- /clear (/c)\n- /clear (/c) [\"text\"/\"images\"]\n- /switch (/s)\n- /about\n- /roadmap\n- /changelog\n- /licenses\n- /help (/h)\n- /help (/h) [command]");
+                        alert("Commands:\n- /regenerate (/g)\n- /continue (/t)\n- /regret (/r)\n- /regret (/r) [count]\n- /clear (/c)\n- /clear (/c) [\"text\"/\"images\"]\n- /switch (/s)\n- /about\n- /roadmap\n- /changelog\n- /licenses\n- /help (/h)\n- /help (/h) [command]");
                     }
                     return true;
                 case "egg":
