@@ -9,7 +9,7 @@
     <title>simple-ai-wrapper</title>
     <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
     <meta name="author" content="fengzi">
-    <meta name="version" content="2.7.1">
+    <meta name="version" content="2.7">
     <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
     <style>
         :root {
@@ -17,7 +17,7 @@
         }
         html {
             width: 100%;
-            height: 100dvh;
+            height: 100%;
         }
         body {
             width: 100%;
@@ -317,7 +317,6 @@
         let mode = "text";
         let textHistory = [];
 
-        const topPageSection = document.getElementById("top-page-section");
         const textResults = document.getElementById("text-results");
         const imageResults = document.getElementById("image-results");
         const textMessageInput = document.getElementById("text-message-input");
@@ -407,7 +406,7 @@
             textElement.classList.add("text-message");
             textElement.classList.add(newMessage.user ? "user-message" : "model-message");
             textResults.appendChild(textElement);
-            topPageSection.scrollTo(0, topPageSection.scrollHeight);
+            window.scrollTo(0, document.body.scrollHeight);
             return textElement;
         }
 
@@ -530,7 +529,7 @@
                     alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify any text message or image\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting\n- Make ai reply as user");
                     return true;
                 case "changelog":
-                    alert("v2.7.1:\n- Fix text mode auto-scrolling and document height on mobile\n\nv2.7:\n- New default models and second quick switch buttons row for text mode\n- 6x the default max tokens per output and slightly higher temperature preset\n- More polished top and bottom page sections layout for text mode\n\nv2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
+                    alert("v2.7:\n- New default models and second quick switch buttons row for text mode\n- 6x the default max tokens per output and slightly higher temperature preset\n- More polished top and bottom page sections layout for text mode\n\nv2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
                     return true;
                 case "licenses":
                 case "license":
@@ -646,7 +645,7 @@
                                 const data = JSON.parse(unsafePayload); // parse
                                 respondingText += data.response; // add data
                                 respondingElement.innerHTML = marked.parse(respondingText); // EXPERIMENTAL: replace ui with parsed markdown
-                                if ((topPageSection.clientHeight + topPageSection.scrollTop + 64) >= topPageSection.scrollHeight) topPageSection.scrollTo(0, topPageSection.scrollHeight); // scroll to bottom if close to bottom
+                                if ((window.innerHeight + window.scrollY + 64) >= document.body.offsetHeight) window.scrollTo(0, document.body.scrollHeight); // scroll to bottom if close to bottom
                             } catch (error) {
                                 console.error("ERROR: failed to parse json in assumed actual safe payload\n", unsafePayload, error); // DEBUG
                             }
