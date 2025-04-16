@@ -17,7 +17,7 @@
         }
         html {
             width: 100%;
-            height: var(--full-height, 100vh);
+            height: 100dvh;
         }
         body {
             width: 100%;
@@ -329,11 +329,11 @@
         // dynamically resize document size for quirky mobile browsers
         if (window.visualViewport) {
             window.visualViewport.addEventListener("resize", () => {
-                document.documentElement.style.setProperty("--full-height", `${window.visualViewport.height}px`);
+                window.scrollTo(0, 0);
             });
         } else {
             window.addEventListener("resize", () => {
-                document.documentElement.style.setProperty("--full-height", `${window.innerHeight}px`);
+                window.scrollTo(0, 0);
             });
         }
 
