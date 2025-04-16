@@ -17,7 +17,7 @@
         }
         html {
             width: 100%;
-            height: calc(var(--vh, 1vh) * 100);
+            height: var(--full-height, 100vh);
         }
         body {
             width: 100%;
@@ -327,9 +327,15 @@
         const quickSwitchButtons = document.querySelectorAll(".quick-switch-button");
 
         // dynamically resize document size for quirky mobile browsers
-        window.addEventListener("resize", () => {
-            document.documentElement.style.setProperty("--vh", `${window.innerHeight * 0.01}px`);
-        });
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", () => {
+                document.documentElement.style.setProperty("--full-height", `${window.visualViewport.height}px`);
+            });
+        } else {
+            window.addEventListener("resize", () => {
+                document.documentElement.style.setProperty("--full-height", `${window.innerHeight}px`);
+            });
+        }
 
         // change default model and switch elements display based on mode
         // must be exclusive to the mode and display be "flex"
