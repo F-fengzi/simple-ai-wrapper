@@ -9,7 +9,7 @@
     <title>simple-ai-wrapper</title>
     <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
     <meta name="author" content="fengzi">
-    <meta name="version" content="2.8">
+    <meta name="version" content="2.7.1">
     <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
     <style>
         :root {
@@ -312,7 +312,7 @@
             <button id="text-send-button">Send</button>
         </div>
     </div>
-    <script src="./marked.umd.js" defer></script>
+    <script src="./marked.min.js" defer></script>
     <script>
         let mode = "text";
         let textHistory = [];
@@ -416,13 +416,52 @@
         function addLastTextMessage() {
             const newMessage = textHistory[textHistory.length - 1];
             const textElement = document.createElement("p");
-            textElement.innerHTML = marked.parse(newMessage.content);
+            textElement.innerHTML = newMessage.content;
             textElement.classList.add("text-message");
             textElement.classList.add(newMessage.user ? "user-message" : "model-message");
             textResults.appendChild(textElement);
             topPageSection.scrollTo(0, topPageSection.scrollHeight);
             return textElement;
         }
+
+        // keyboard event listener: slash key focus, button hints to command input, and enter keyboard behavior: shift + enter default (normally newline), ctrl + enter to send, enter is auto
+        document.addEventListener("keydown", event => {
+            let theInput, theButton;
+            if (event.key === "/") textMessageInput.focus();
+            if (document.activeElement === textMessageInput) {
+                theInput = textMessageInput;
+                theButton = textSendButton;
+                setTimeout(() => {
+                    if (textMessageInput.value.startsWith("/")) {
+                        textSendButton.innerHTML = "Magic?";
+                    } else {
+                        textSendButton.innerHTML = "Send";
+                    }
+                }, 1);
+            } else if (document.activeElement === imagePromptInput) {
+                theInput = imagePromptInput;
+                theButton = imageGenerateButton;
+                setTimeout(() => {
+                    if (imagePromptInput.value.startsWith("/")) {
+                        imageGenerateButton.innerHTML = "Magic?";
+                    } else {
+                        imageGenerateButton.innerHTML = "Generate";
+                    }
+                }, 1);
+            } else {
+                return;
+            }
+
+            // to send:
+            if (event.key === "Enter" && // enter is pressed
+                !(event.shiftKey) && // shift must not be pressed
+                (event.ctrlKey || // either ctrl is pressed
+                (theInput.value.trim() !== "" && !(theInput.value.includes("\n")))) // or nothing needs to be pressed but message must not be empty and there isn't already a newline, in which cases Enter enters newline mode
+            ) {
+                event.preventDefault();
+                theButton.click();
+            }
+        });
 
         // commands
         function handleCommands(rawInput) {
@@ -439,24 +478,14 @@
                     return true;
                 case "continue":
                 case "t":
-                    if (textHistory.length == 0) {
-                        getModelResponse();
-                    } else if (processedOptions.length >= 2) {
-                        getModelResponse(processedOptions[1].toLowerCase());
-                    } else {
-                        getModelResponse("space");
-                    }
+                    getModelResponse();
                     return true;
                 case "edit":
                 case "e":
                     if (textHistory.length > 0) {
-                        if (processedOptions.length >= 2) {
-                            const editTo = processedOptions.slice(1).join(" ");
-                            textHistory[textHistory.length - 1].content = editTo;
-                            textResults.lastElementChild.innerHTML = marked.parse(editTo);
-                        } else {
-                            textMessageInput.value = rawInput + " " + textHistory[textHistory.length - 1].content;
-                        }
+                        const editTo = processedOptions.slice(1).join(" ");
+                        textHistory[textHistory.length - 1].content = editTo;
+                        textResults.lastElementChild.innerHTML = marked.parse(editTo);
                     } else {
                         alert("No message to edit.");
                     }
@@ -496,33 +525,6 @@
                         alert("Not a valid command. Type '/help clear' to get more info.");
                     }
                     return true;
-                case "import":
-                    if (processedOptions.length >= 2) {
-                        const rawImportInput = processedOptions.slice(1).join(" ");
-                        try {
-                            textHistory = [];
-                            textResults.innerHTML = "";
-                            const importingTextHistory = JSON.parse(rawImportInput);
-                            for (entry of importingTextHistory) {
-                                textHistory.push(entry);
-                                addLastTextMessage();
-                            }
-                        } catch (error) {
-                            alert("Failed to add chat history. Invalid format: " + error);
-                        }
-                    } else {
-                        alert("No text to import. Type '/help import' to get more info.") // TODO!!!!!
-                    }
-                    return true;
-                case "export":
-                    navigator.clipboard.writeText(JSON.stringify(textHistory))
-                        .then(() => {
-                            alert("Copied chat history to clipboard");
-                        })
-                        .catch(error => {
-                            alert("Failed to copy chat history to clipboard: " + error);
-                        });
-                    return true;
                 case "switch":
                 case "s":
                     mode = mode === "text" ? "image" : "text";
@@ -541,7 +543,7 @@
                     alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify any text message or image\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting\n- Make ai reply as user");
                     return true;
                 case "changelog":
-                    alert("v2.8:\n- New /import and /export commands\n- The continue command now continues in the same message by default, with new mode options\n- The edit command now fills the last message's content for you to edit if left blank\n- Consistently parse user messages as markdown too\n- Trim image mode prompts too\n- Reduced excessive debug warnings\n- Bump marked version\n\nv2.7.1:\n- Fix text mode auto-scrolling and document height on mobile\n\nv2.7:\n- New default models and second quick switch buttons row for text mode\n- 6x the default max tokens per output and slightly higher temperature preset\n- More polished top and bottom page sections layout for text mode\n\nv2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
+                    alert("v2.7.1:\n- Fix text mode auto-scrolling and document height on mobile\n\nv2.7:\n- New default models and second quick switch buttons row for text mode\n- 6x the default max tokens per output and slightly higher temperature preset\n- More polished top and bottom page sections layout for text mode\n\nv2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
                     return true;
                 case "licenses":
                 case "license":
@@ -552,34 +554,28 @@
                     if (processedOptions.length >= 2) {
                         switch (processedOptions[1].toLowerCase()) {
                             case "regenerate":
-                                alert("/regenerate (/g)\n\nRegenerate the last response in text mode. You can also use this to let the model start the first message.");
+                                alert("/regenerate\n\nRegenerate the last response in text mode. You can also use this to let the model start the first message.");
                                 break;
                             case "continue":
-                                alert("/continue (/t) [mode]\n\nLet the model continue to generate the response in text mode. [mode] can be one of:\n- \"none\" or \"nogap\" to continue directly after the end of the same message\n- \"space\" or \"newspace\" to continue after a space\n- \"line\" or \"newline\" to continue in a new line\n- \"new\", \"msg\", or \"newmsg\" to start a new message.\nBy default this is set to \"space\". You can also use this to let it start the first message.");
+                                alert("/continue\n\nLet the model continue to generate another message in text mode. You can also use this to let it start the first message.");
                                 break;
                             case "edit":
-                                alert("/edit (/e) [message]\n\nEdit the last message's content to [message] in the chat history. (This can be either a model or user message.) If [message] is left blank, autofill input to the last message's content to edit.");
+                                alert("/edit [message]\n\nEdit the last message in the chat history. (This can be either a model or user message.)");
                                 break;
                             case "regret":
-                                alert("/regret (/r) [count]\n\nRemove the last [count] results in the current mode. (In text mode, this includes both model and user messages.) [count] must be a positive integer. Default is 2 in text mode and 1 in image mode.");
+                                alert("/regret [count]\n\nRemove the last [count] results in the current mode. (In text mode, this includes both model and user messages.) [count] must be a positive integer. Default is 2 in text mode and 1 in image mode.");
                                 break;
                             case "clear":
-                                alert("/clear (/c) [mode]\n\nClear all results in the specified [mode] (\"text\" or \"images\"). Default is the current mode.");
-                                break;
-                            case "import":
-                                alert("/import [history]\n\nClear the current chat and import text history from the JSON [history] gotten from /export.");
-                                break;
-                            case "export":
-                                alert("/export\n\nCopy text history as JSON to the clipboard to be imported with /import later.");
+                                alert("/clear [mode]\n\nClear all results in the specified mode (text or images). Default is the current mode.");
                                 break;
                             case "switch":
-                                alert("/switch (/s)\n\nSwitch between text and image modes.");
+                                alert("/switch\n\nSwitch between text and image modes.");
                                 break;
                             case "about":
                                 alert("/about\n\nShow info about this project.");
                                 break;
                             case "roadmap":
-                                alert("/roadmap\n\nShow the list of planned features that may get added in the future.");
+                                alert("/roadmap\n\nShow the list planned features they may get added in the future.");
                                 break;
                             case "changelog":
                                 alert("/changelog\n\nShow the list of changes over each version.");
@@ -594,7 +590,7 @@
                                 alert("Not a valid command. Type '/help' to see a list of all available commands.");
                         }
                     } else {
-                        alert("Commands:\n- /regenerate (/g)\n- /continue (/t)\n- /continue (/t) [mode]\n- /edit (/e)\n- /edit (/e) [message]\n- /regret (/r)\n- /regret (/r) [count]\n- /clear (/c)\n- /clear (/c) [\"text\"/\"images\"]\n- /import [history]\n- /export\n- /switch (/s)\n- /about\n- /roadmap\n- /changelog\n- /licenses\n- /help (/h)\n- /help (/h) [command]");
+                        alert("Commands:\n- /regenerate (/g)\n- /continue (/t)\n- /edit (/e) [message]\n- /regret (/r)\n- /regret (/r) [count]\n- /clear (/c)\n- /clear (/c) [\"text\"/\"images\"]\n- /switch (/s)\n- /about\n- /roadmap\n- /changelog\n- /licenses\n- /help (/h)\n- /help (/h) [command]");
                     }
                     return true;
                 case "egg":
@@ -606,7 +602,7 @@
         }
 
         // get text mode model response and put it in a new text message
-        function getModelResponse(mode = "new") {
+        function getModelResponse() {
             // get the values
             const model = document.getElementById("model-selector").value;
             const systemPrompt = document.getElementById("system-prompt-input").value;
@@ -637,27 +633,11 @@
                 body: JSON.stringify(requestBody)
             })
             .then(async response => {
-                // select or add new responding model msg
-                let currentHistoryItemZ;
-                let respondingElement;
-                let respondingText;
-                if (mode === "new" || mode === "msg" || mode === "newmsg") {
-                    textHistory.push({ user: false, content: "" });
-                    currentHistoryItem = textHistory[textHistory.length - 1];
-                    respondingElement = addLastTextMessage();
-                    respondingText = "";
-                } else {
-                    currentHistoryItem = textHistory[textHistory.length - 1];
-                    respondingElement = textResults.lastElementChild;
-                    respondingText = currentHistoryItem.content;
-                    if (mode === "none" || mode === "nogap") {
-                        // (as is)
-                    } else if (mode === "line" || mode === "newline") {
-                        respondingText += "\n\n";
-                    } else { // "space", "newspace", and default
-                        respondingText += " ";
-                    }
-                }
+                // add new responding model msg
+                textHistory.push({ user: false, content: "" });
+                const currentHistoryItem = textHistory[textHistory.length - 1];
+                const respondingElement = addLastTextMessage();
+                let respondingText = "";
 
                 // sse decode magic took me a whole day to figure out
                 // the below logic is running in beta, i will leave debug code inside to detect unexpected patterns and behaviors from data
@@ -670,10 +650,11 @@
                     const chunk = decoder.decode(value, { stream: true });
                     const unsafePayloads = chunk.split("data: ");
                     unsafePayloads.shift();
+                    if (unsafePayloads.length !== 1) console.warn("WARNING: unusual unsafe payloads count in one chunk\n", chunk); // DEBUG
                     unsafePayloads.forEach(unsafePayload => {
                         if (unsafePayload.startsWith("{\"response\":\"")) { // sneaky little tomfoolery trolling thingamabob
                             // likely actual payload (man i hate this sse method they just send text)
-                            if (!(unsafePayload.trim().endsWith("\}"))) console.warn("WARNING: payloads starts with json response but did not close\n", unsafePayload); // DEBUG
+                            if (!(unsafePayload.trim().endsWith("\"}"))) console.warn("WARNING: payloads starts with json response but did not close\n", unsafePayload); // DEBUG
                             try {
                                 const data = JSON.parse(unsafePayload); // parse
                                 respondingText += data.response; // add data
@@ -705,45 +686,6 @@
             });
         }
 
-        // keyboard event listener: slash key focus, button hints to command input, and enter keyboard behavior: shift + enter default (normally newline), ctrl + enter to send, enter is auto
-        document.addEventListener("keydown", event => {
-            let theInput, theButton;
-            if (event.key === "/") textMessageInput.focus();
-            if (document.activeElement === textMessageInput) {
-                theInput = textMessageInput;
-                theButton = textSendButton;
-                setTimeout(() => {
-                    if (textMessageInput.value.trim().startsWith("/")) {
-                        textSendButton.innerHTML = "Magic?";
-                    } else {
-                        textSendButton.innerHTML = "Send";
-                    }
-                }, 1);
-            } else if (document.activeElement === imagePromptInput) {
-                theInput = imagePromptInput;
-                theButton = imageGenerateButton;
-                setTimeout(() => {
-                    if (imagePromptInput.value.trim().startsWith("/")) {
-                        imageGenerateButton.innerHTML = "Magic?";
-                    } else {
-                        imageGenerateButton.innerHTML = "Generate";
-                    }
-                }, 1);
-            } else {
-                return;
-            }
-
-            // to send:
-            if (event.key === "Enter" && // enter is pressed
-                !(event.shiftKey) && // shift must not be pressed
-                (event.ctrlKey || // either ctrl is pressed
-                (theInput.value.trim() !== "" && !(theInput.value.includes("\n")))) // or nothing needs to be pressed but message must not be empty and there isn't already a newline, in which cases Enter enters newline mode
-            ) {
-                event.preventDefault();
-                theButton.click();
-            }
-        });
-
         // new text request
         textSendButton.addEventListener("click", () => {
             // get the message and clear input
@@ -774,11 +716,9 @@
 
         // new image request
         imageGenerateButton.addEventListener("click", () => {
-            // get the values
             const model = document.getElementById("model-selector").value;
-            const prompt = imagePromptInput.value.trim();
+            const prompt = imagePromptInput.value;
 
-            // special commands
             if (prompt.startsWith("/")) {
                 if (handleCommands(prompt)) {
                     imagePromptInput.value = "";
@@ -790,7 +730,6 @@
                 }
             }
 
-            // prepare data to send to the model
             const requestBody = {
                 model,
                 options: {
@@ -798,7 +737,6 @@
                 }
             };
 
-            // send request
             imageQueue++;
             updateHints();
 
