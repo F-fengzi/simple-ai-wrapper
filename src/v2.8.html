@@ -9,7 +9,7 @@
     <title>simple-ai-wrapper</title>
     <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
     <meta name="author" content="fengzi">
-    <meta name="version" content="2.9">
+    <meta name="version" content="2.8">
     <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
     <style>
         :root {
@@ -92,8 +92,6 @@
         }
 
         #text-hint, #image-hint {
-            position: sticky;
-            top: 0;
             margin: 0.5rem 0;
         }
         /* ---------- */
@@ -289,10 +287,10 @@
             <div class="top-quick-switches-row">
                 <button class="quick-switch-button" data-model="@cf/meta/llama-4-scout-17b-16e-instruct">Llama 4 17B</button>
                 <button class="quick-switch-button" data-model="@cf/meta/llama-3.3-70b-instruct-fp8-fast">Llama 3.3 70B</button>
-                <button class="quick-switch-button" data-model="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</button>
+                <button class="quick-switch-button" data-model="@cf/meta/llama-3.2-11b-vision-instruct">Llama 3.2 11B</button>
             </div>
             <div id="second-top-quick-switches-row" class="top-quick-switches-row">
-                <button class="quick-switch-button" data-model="@cf/qwen/qwen3-30b-a3b-fp8">Qwen3 30B</button>
+                <button class="quick-switch-button" data-model="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</button>
                 <button class="quick-switch-button" data-model="@cf/google/gemma-3-12b-it">Gemma 3 12B</button>
                 <button class="quick-switch-button" data-model="@cf/mistralai/mistral-small-3.1-24b-instruct">Mistral 3.1 24B</button>
             </div>
@@ -359,10 +357,10 @@
                 quickSwitchButtons[0].setAttribute("data-model", "@cf/meta/llama-4-scout-17b-16e-instruct");
                 quickSwitchButtons[1].innerHTML = "Llama 3.3 70B";
                 quickSwitchButtons[1].setAttribute("data-model", "@cf/meta/llama-3.3-70b-instruct-fp8-fast");
+                quickSwitchButtons[2].innerHTML = "Llama 3.2 11B";
+                quickSwitchButtons[2].setAttribute("data-model", "@cf/meta/llama-3.2-11b-vision-instruct");
                 quickSwitchButtons[3].innerHTML = "Llama 3.1 8B";
                 quickSwitchButtons[3].setAttribute("data-model", "@cf/meta/llama-3.1-8b-instruct");
-                quickSwitchButtons[3].innerHTML = "Qwen3 30B";
-                quickSwitchButtons[3].setAttribute("data-model", "@cf/qwen/qwen3-30b-a3b-fp8");
                 quickSwitchButtons[4].innerHTML = "Gemma 3 12B";
                 quickSwitchButtons[4].setAttribute("data-model", "@cf/google/gemma-3-12b-it");
                 quickSwitchButtons[5].innerHTML = "Mistral 3.1 24B";
@@ -513,7 +511,7 @@
                             alert("Failed to add chat history. Invalid format: " + error);
                         }
                     } else {
-                        alert("No text to import. Type '/help import' to get more info.")
+                        alert("No text to import. Type '/help import' to get more info.") // TODO!!!!!
                     }
                     return true;
                 case "export":
@@ -543,7 +541,7 @@
                     alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify any text message or image\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting\n- Make ai reply as user");
                     return true;
                 case "changelog":
-                    alert("v2.9:\n- Support for a new output schema and hence more models\n- New quick switcher model and swapped out an old model\n- Hint text now sticks to the top of screen\n\nv2.8:\n- New /import and /export commands\n- The continue command now continues in the same message by default, with new mode options\n- The edit command now fills the last message's content for you to edit if left blank\n- Consistently parse user messages as markdown too\n- Trim image mode prompts too\n- Reduced excessive debug warnings\n- Bump marked version\n\nv2.7.1:\n- Fix text mode auto-scrolling and document height on mobile\n\nv2.7:\n- New default models and second quick switch buttons row for text mode\n- 6x the default max tokens per output and slightly higher temperature preset\n- More polished top and bottom page sections layout for text mode\n\nv2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
+                    alert("v2.8:\n- New /import and /export commands\n- The continue command now continues in the same message by default, with new mode options\n- The edit command now fills the last message's content for you to edit if left blank\n- Consistently parse user messages as markdown too\n- Trim image mode prompts too\n- Reduced excessive debug warnings\n- Bump marked version\n\nv2.7.1:\n- Fix text mode auto-scrolling and document height on mobile\n\nv2.7:\n- New default models and second quick switch buttons row for text mode\n- 6x the default max tokens per output and slightly higher temperature preset\n- More polished top and bottom page sections layout for text mode\n\nv2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
                     return true;
                 case "licenses":
                 case "license":
@@ -569,7 +567,7 @@
                                 alert("/clear (/c) [mode]\n\nClear all results in the specified [mode] (\"text\" or \"images\"). Default is the current mode.");
                                 break;
                             case "import":
-                                alert("/import <history>\n\nClear the current chat and import text history from the JSON <history> gotten from /export.");
+                                alert("/import [history]\n\nClear the current chat and import text history from the JSON [history] gotten from /export.");
                                 break;
                             case "export":
                                 alert("/export\n\nCopy text history as JSON to the clipboard to be imported with /import later.");
@@ -596,7 +594,7 @@
                                 alert("Not a valid command. Type '/help' to see a list of all available commands.");
                         }
                     } else {
-                        alert("Commands:\n- /regenerate (/g)\n- /continue (/t) [mode]\n- /edit (/e) [message]\n- /regret (/r) [count]\n- /clear (/c) [\"text\"/\"images\"]\n- /import <history>\n- /export\n- /switch (/s)\n- /about\n- /roadmap\n- /changelog\n- /licenses\n- /help (/h) [command]");
+                        alert("Commands:\n- /regenerate (/g)\n- /continue (/t)\n- /continue (/t) [mode]\n- /edit (/e)\n- /edit (/e) [message]\n- /regret (/r)\n- /regret (/r) [count]\n- /clear (/c)\n- /clear (/c) [\"text\"/\"images\"]\n- /import [history]\n- /export\n- /switch (/s)\n- /about\n- /roadmap\n- /changelog\n- /licenses\n- /help (/h)\n- /help (/h) [command]");
                     }
                     return true;
                 case "egg":
@@ -607,7 +605,7 @@
             }
         }
 
-        // get text mode model response and add it somewhere depending on the mode
+        // get text mode model response and put it in a new text message
         function getModelResponse(mode = "new") {
             // get the values
             const model = document.getElementById("model-selector").value;
@@ -656,7 +654,7 @@
                         // (as is)
                     } else if (mode === "line" || mode === "newline") {
                         respondingText += "\n\n";
-                    } else { // "space", "newspace", and fallback
+                    } else { // "space", "newspace", and default
                         respondingText += " ";
                     }
                 }
@@ -669,30 +667,23 @@
                 while (!readerDone && !dataDone) {
                     let { value, done } = await reader.read();
                     readerDone = done;
-                    const chunk = decoder.decode(value, { stream: true }); // read sse chunks
-                    const payloads = chunk.split("data: "); // split into data payloads
-                    payloads.shift(); // empty first item due to split
-                    payloads.forEach(payload => { // do things with them payloads
-                        if (payload.startsWith("{\"response\":\"") || payload.startsWith("{\"id\":\"")) { // sneaky little tomfoolery trolling thingamabob
-                            // likely data payload (man i hate this sse method they just send text)
-                            if (!(payload.trim().endsWith("\}"))) console.warn("WARNING: payload starts with familiar json response but did not close\n", payload); // DEBUG
+                    const chunk = decoder.decode(value, { stream: true });
+                    const unsafePayloads = chunk.split("data: ");
+                    unsafePayloads.shift();
+                    unsafePayloads.forEach(unsafePayload => {
+                        if (unsafePayload.startsWith("{\"response\":\"")) { // sneaky little tomfoolery trolling thingamabob
+                            // likely actual payload (man i hate this sse method they just send text)
+                            if (!(unsafePayload.trim().endsWith("\}"))) console.warn("WARNING: payloads starts with json response but did not close\n", unsafePayload); // DEBUG
                             try {
-                                const data = JSON.parse(payload); // unbox the holy gift from this black box api
-                                if (Object.hasOwn(data, "response")) {
-                                    respondingText += data.response; // add data
-                                } else if (Object.hasOwn(data, "choices")) { // fking separate schema for certain new models
-                                    actualContent = data.choices[0]?.delta?.content;
-                                    if (actualContent !== undefined) respondingText += actualContent;
-                                } else {
-                                    console.warn("WARNING: payload first determined to be data but doesn't contain a known schema for response\n", payload); // DEBUG
-                                }
+                                const data = JSON.parse(unsafePayload); // parse
+                                respondingText += data.response; // add data
                                 respondingElement.innerHTML = marked.parse(respondingText); // EXPERIMENTAL: replace ui with parsed markdown
-                                if ((topPageSection.clientHeight + topPageSection.scrollTop + 36) >= topPageSection.scrollHeight) topPageSection.scrollTo(0, topPageSection.scrollHeight); // scroll to bottom if close to bottom
+                                if ((topPageSection.clientHeight + topPageSection.scrollTop + 64) >= topPageSection.scrollHeight) topPageSection.scrollTo(0, topPageSection.scrollHeight); // scroll to bottom if close to bottom
                             } catch (error) {
-                                console.error("ERROR: failed trying to use a payload with a familiar json response\n", payload, error); // DEBUG
+                                console.error("ERROR: failed to parse json in assumed actual safe payload\n", unsafePayload, error); // DEBUG
                             }
-                        } else if (payload.startsWith("[DONE]")) {
-                            // very likely done payload
+                        } else if (unsafePayload.startsWith("[DONE]")) {
+                            // very likely done
                             currentHistoryItem.content = respondingText;
                             textQueue--;
                             updateHints();
@@ -700,10 +691,10 @@
                             console.log("DEBUG: data done return: \n reader done", readerDone, "data done", dataDone); // DEBUG
                             return;
                         } else {
-                            console.warn("WARNING: unknown payload type\n", payload); // DEBUG
+                            console.warn("WARNING: unknown payload type\n", unsafePayload); // DEBUG
                         }
                     });
-                    if (readerDone) console.warn("WARNING: using readerDone (payloads foreach function didn't return out the entire loop, which is maybe expected behavior). is concerning if there isn't data done notice on top ^"); // DEBUG
+                    if (readerDone) console.warn("WARNING: using readerDone (unsafePayloads foreach function didn't return out the entire loop, which is maybe expected behavior). is concerning if there isn't data done notice on top ^"); // DEBUG
                     if (readerDone && !dataDone) console.warn("WARNING: confirmed reader done without data done"); // DEBUG
                 }
             })
