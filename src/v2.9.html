@@ -1,6 +1,6 @@
-<!-- The following code is provided under the MIT License. Copyright 2026 Fengzi. -->
-<!-- As part of the MIT License, any derivatives must give credit to the mentioned copyright holder. -->
-<!-- The backend API can be very easily recreated by just following the examples provided in the Workers documentation except some fking stupid differing API workarounds for some models. -->
+<!-- The following code is provided under the MIT License. Copyright 2025 Fengzi. -->
+<!-- As part of the MIT License, any deriatives must give credit to the mentioned copyright holder. -->
+<!-- The backend API can be very easily recreated by just following the examples provided in the Workers documentation. Mine used ~10 lines of code. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +9,7 @@
     <title>simple-ai-wrapper</title>
     <meta name="description" content="a simple ai api (specifically a few cf workers) wrapper using vanilla html/js/css that i initially wrote in like 30 minutes with some ai help">
     <meta name="author" content="fengzi">
-    <meta name="version" content="2.10">
+    <meta name="version" content="2.9">
     <!-- <link rel="dns-prefetch" href="https://ai-endpoint.fengzi.workers.dev/"> -->
     <style>
         :root {
@@ -142,6 +142,7 @@
             box-sizing: border-box;
             border-radius: 8px;
             font-size: 16px;
+            font-family: sans-serif;
             word-break: break-word;
             box-shadow: 0 3px 6px rgba(10, 10, 9, 0.05);
         }
@@ -274,7 +275,7 @@
                     <option value="text">Text Generation</option>
                     <option value="image">Image Generation</option>
                 </select>
-                <input id="model-selector" type="text" value="" placeholder="Cf-accepted model">
+                <input id="model-selector" type="text" value="@cf/meta/llama-4-scout-17b-16e-instruct" placeholder="Cf-accepted model">
             </div>
             <div id="text-task-column">
                 <textarea id="system-prompt-input" placeholder="System prompt">You are a friendly assistant.</textarea>
@@ -286,14 +287,14 @@
         </div>
         <div id="top-quick-switches-container">
             <div class="top-quick-switches-row">
-                <button class="quick-switch-button" data-model="">Please</button>
-                <button class="quick-switch-button" data-model="">enable</button>
-                <button class="quick-switch-button" data-model="">JavaScript</button>
+                <button class="quick-switch-button" data-model="@cf/meta/llama-4-scout-17b-16e-instruct">Llama 4 17B</button>
+                <button class="quick-switch-button" data-model="@cf/meta/llama-3.3-70b-instruct-fp8-fast">Llama 3.3 70B</button>
+                <button class="quick-switch-button" data-model="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</button>
             </div>
             <div id="second-top-quick-switches-row" class="top-quick-switches-row">
-                <button class="quick-switch-button" data-model="">to</button>
-                <button class="quick-switch-button" data-model="">use</button>
-                <button class="quick-switch-button" data-model="">simple-ai-wrapper</button>
+                <button class="quick-switch-button" data-model="@cf/qwen/qwen3-30b-a3b-fp8">Qwen3 30B</button>
+                <button class="quick-switch-button" data-model="@cf/google/gemma-3-12b-it">Gemma 3 12B</button>
+                <button class="quick-switch-button" data-model="@cf/mistralai/mistral-small-3.1-24b-instruct">Mistral 3.1 24B</button>
             </div>
         </div>
         <div id="results-display">
@@ -344,9 +345,7 @@
         // must be exclusive to the mode and display be "flex"
         const TEXT_MODE_ELEMENTS = ["text-task-column", "second-top-quick-switches-row", "text-section", "bottom-page-section"];
         const IMAGE_MODE_ELEMENTS = ["image-task-column", "image-section"];
-        function switchToCurrentMode() {            
-            mode = document.getElementById("mode-selector").value;
-
+        function switchMode() {
             TEXT_MODE_ELEMENTS.forEach(id => {
                 document.getElementById(id).style.display = mode === "text" ? "flex" : "none"; // why tf is hidden unstable??
             });
@@ -355,30 +354,34 @@
             });
 
             if (mode === "text") {
-                quickSwitchButtons[0].innerHTML = "Gemma 4 26B A4B";
-                quickSwitchButtons[0].setAttribute("data-model", "@cf/google/gemma-4-26b-a4b-it");
-                quickSwitchButtons[1].innerHTML = "gpt-oss-120b";
-                quickSwitchButtons[1].setAttribute("data-model", "@cf/openai/gpt-oss-120b");
-                quickSwitchButtons[2].innerHTML = "GLM-4.7-Flash";
-                quickSwitchButtons[2].setAttribute("data-model", "@cf/zai-org/glm-4.7-flash");
-                quickSwitchButtons[3].innerHTML = "gpt-oss-20b";
-                quickSwitchButtons[3].setAttribute("data-model", "@cf/openai/gpt-oss-20b");
-                quickSwitchButtons[4].innerHTML = "Mistral Small 3.1";
-                quickSwitchButtons[4].setAttribute("data-model", "@cf/mistralai/mistral-small-3.1-24b-instruct");
-                quickSwitchButtons[5].innerHTML = "Llama 3.3 70B";
-                quickSwitchButtons[5].setAttribute("data-model", "@cf/meta/llama-3.3-70b-instruct-fp8-fast");
+                document.getElementById("model-selector").value = "@cf/meta/llama-4-scout-17b-16e-instruct";
+                quickSwitchButtons[0].innerHTML = "Llama 4 17B";
+                quickSwitchButtons[0].setAttribute("data-model", "@cf/meta/llama-4-scout-17b-16e-instruct");
+                quickSwitchButtons[1].innerHTML = "Llama 3.3 70B";
+                quickSwitchButtons[1].setAttribute("data-model", "@cf/meta/llama-3.3-70b-instruct-fp8-fast");
+                quickSwitchButtons[3].innerHTML = "Llama 3.1 8B";
+                quickSwitchButtons[3].setAttribute("data-model", "@cf/meta/llama-3.1-8b-instruct");
+                quickSwitchButtons[3].innerHTML = "Qwen3 30B";
+                quickSwitchButtons[3].setAttribute("data-model", "@cf/qwen/qwen3-30b-a3b-fp8");
+                quickSwitchButtons[4].innerHTML = "Gemma 3 12B";
+                quickSwitchButtons[4].setAttribute("data-model", "@cf/google/gemma-3-12b-it");
+                quickSwitchButtons[5].innerHTML = "Mistral 3.1 24B";
+                quickSwitchButtons[5].setAttribute("data-model", "@cf/mistralai/mistral-small-3.1-24b-instruct");
             } else if (mode === "image") {
-                quickSwitchButtons[0].innerHTML = "FLUX.2 [klein] 9B";
-                quickSwitchButtons[0].setAttribute("data-model", "@cf/black-forest-labs/flux-2-klein-9b");
-                quickSwitchButtons[1].innerHTML = "Lucid Origin";
-                quickSwitchButtons[1].setAttribute("data-model", "@cf/leonardo/lucid-origin");
-                quickSwitchButtons[2].innerHTML = "SDXL";
-                quickSwitchButtons[2].setAttribute("data-model", "@cf/stabilityai/stable-diffusion-xl-base-1.0");
+                document.getElementById("model-selector").value = "@cf/black-forest-labs/flux-1-schnell";
+                quickSwitchButtons[0].innerHTML = "FLUX.1 [schnell]";
+                quickSwitchButtons[0].setAttribute("data-model", "@cf/black-forest-labs/flux-1-schnell");
+                quickSwitchButtons[1].innerHTML = "SDXL";
+                quickSwitchButtons[1].setAttribute("data-model", "@cf/stabilityai/stable-diffusion-xl-base-1.0");
+                quickSwitchButtons[2].innerHTML = "SDXL Lightning";
+                quickSwitchButtons[2].setAttribute("data-model", "@cf/bytedance/stable-diffusion-xl-lightning");
             }
-            document.getElementById("model-selector").value = quickSwitchButtons[0].attributes["data-model"].value;
-            updateActiveQuickSwitchButton();
         }
-        document.getElementById("mode-selector").addEventListener("change", switchToCurrentMode);
+        document.getElementById("mode-selector").addEventListener("change", () => {
+            mode = document.getElementById("mode-selector").value;
+            switchMode();
+            updateActiveQuickSwitchButton();
+        });
 
         // update active button upon manual model change
         function updateActiveQuickSwitchButton() {
@@ -392,7 +395,8 @@
         }
         document.getElementById("model-selector").addEventListener("input", updateActiveQuickSwitchButton);
 
-        switchToCurrentMode();
+        switchMode();
+        updateActiveQuickSwitchButton();
 
         // quick switch buttons' function
         quickSwitchButtons.forEach(button => {
@@ -523,8 +527,9 @@
                     return true;
                 case "switch":
                 case "s":
-                    document.getElementById("mode-selector").value = mode === "text" ? "image" : "text";
-                    switchToCurrentMode();
+                    mode = mode === "text" ? "image" : "text";
+                    switchMode();
+                    updateActiveQuickSwitchButton();
                     setTimeout(() => {
                         const theInput = mode === "text" ? textMessageInput : imagePromptInput;
                         theInput.focus();
@@ -538,11 +543,11 @@
                     alert("- Visual updates\n- Better server-side error handling and send back message\n- Ability to stop generating (at least stop receiving)\n- Delete or modify any text message or image\n- Add more controls available to these modes\n- Support all types of models Cloudflare supports\n- Add quick selector for all available models\n- Maybe suggestions to prompting\n- Make ai reply as user");
                     return true;
                 case "changelog":
-                    alert("v2.10:\n- Fix a check that caused responses parsing to be incompatible with the new API schema\n- New model selections in the quick switcher for text and image\n- Remove specifying the messages font style to sans-serif that caused unintended full-width punctuation marks on some systems\n- Other bug fixes\n- Bump marked version\n\nv2.9:\n- Support for a new output schema and hence more models\n- New quick switcher model and swapped out an old model\n- Hint text now sticks to the top of screen\n\nv2.8:\n- New /import and /export commands\n- The continue command now continues in the same message by default, with new mode options\n- The edit command now fills the last message's content for you to edit if left blank\n- Consistently parse user messages as markdown too\n- Trim image mode prompts too\n- Reduced excessive debug warnings\n- Bump marked version\n\nv2.7.1:\n- Fix text mode auto-scrolling and document height on mobile\n\nv2.7:\n- New default models and second quick switch buttons row for text mode\n- 6x the default max tokens per output and slightly higher temperature preset\n- More polished top and bottom page sections layout for text mode\n\nv2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
+                    alert("v2.9:\n- Support for a new output schema and hence more models\n- New quick switcher model and swapped out an old model\n- Hint text now sticks to the top of screen\n\nv2.8:\n- New /import and /export commands\n- The continue command now continues in the same message by default, with new mode options\n- The edit command now fills the last message's content for you to edit if left blank\n- Consistently parse user messages as markdown too\n- Trim image mode prompts too\n- Reduced excessive debug warnings\n- Bump marked version\n\nv2.7.1:\n- Fix text mode auto-scrolling and document height on mobile\n\nv2.7:\n- New default models and second quick switch buttons row for text mode\n- 6x the default max tokens per output and slightly higher temperature preset\n- More polished top and bottom page sections layout for text mode\n\nv2.6:\n- New /edit command\n\nv2.5:\n- New default models for both text and image generation\n\nv2.4:\n- New default model and swapped out an old model\n- More distinguishable colors between normal and italic text\n\nv2.3:\n- New /regenerate command\n- New /continue command\n- New /switch command\n- Command abbreviations and options\n- Fixes and optimizations\n\nv2.2:\n- Commands work in both modes\n- New /regret command\n- Removed model role and user role input\n- Fixes and optimizations\n- More\n\nv2.1:\n- Important bug fixes and UI optimizations\n- Better send and newline keyboard behaviors\n- Shortened the commands\n- Swapped out not-working model in quick switch buttons\n\nv2.0:\n- Text mode\n- Dark mode\n- Ctrl + Enter to send\n- Better image layout\n- Queue display\n- Some commands like these\n- More more jump\n\nv1.0:\n- Made this thingy image mode only");
                     return true;
                 case "licenses":
                 case "license":
-                    alert("simple-ai-wrapper\n\nCopyright 2026 Fengzi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Marked\n\nCopyright (c) 2018+, MarkedJS (https://github.com/markedjs/)\nCopyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Markdown\n\nCopyright © 2004, John Gruber\nhttp://daringfireball.net/\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nThis software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.");
+                    alert("simple-ai-wrapper\n\nCopyright 2025 Fengzi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Marked\n\nCopyright (c) 2018+, MarkedJS (https://github.com/markedjs/)\nCopyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Markdown\n\nCopyright © 2004, John Gruber\nhttp://daringfireball.net/\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nThis software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.");
                     return true;
                 case "help":
                 case "h":
@@ -668,7 +673,7 @@
                     const payloads = chunk.split("data: "); // split into data payloads
                     payloads.shift(); // empty first item due to split
                     payloads.forEach(payload => { // do things with them payloads
-                        if (payload.startsWith("{\"")) { // sneaky little tomfoolery trolling thingamabob
+                        if (payload.startsWith("{\"response\":\"") || payload.startsWith("{\"id\":\"")) { // sneaky little tomfoolery trolling thingamabob
                             // likely data payload (man i hate this sse method they just send text)
                             if (!(payload.trim().endsWith("\}"))) console.warn("WARNING: payload starts with familiar json response but did not close\n", payload); // DEBUG
                             try {
